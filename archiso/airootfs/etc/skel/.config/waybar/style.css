@@ -1,0 +1,8 @@
+/* Night OS waybar — dark lavender theme */
+* { font-family: "JetBrains Mono", monospace; font-size: 12px; }
+window#waybar { background: #1e1e2e; color: #cdd6f4; }
+#workspaces button { color: #6c7086; padding: 0 6px; }
+#workspaces button.active { color: #1e1e2e; background: #b4befe; border-radius: 6px; }
+#clock, #cpu, #memory, #network, #pulseaudio, #battery { padding: 0 8px; color: #cdd6f4; }
+#battery.warning { color: #f9e2af; }
+#battery.critical { color: #f38ba8; }

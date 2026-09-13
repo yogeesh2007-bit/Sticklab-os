@@ -1,0 +1,4 @@
+/* Night OS wofi — matches waybar */
+window { background-color: #1e1e2e; color: #cdd6f4; border: 2px solid #b4befe; }
+#entry:selected { background-color: #b4befe; color: #1e1e2e; }
+#input { background-color: #11111b; color: #cdd6f4; }

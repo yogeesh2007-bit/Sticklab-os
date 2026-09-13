@@ -1,0 +1,5 @@
+# Night OS Labwc autostart — edit freely, everything is optional.
+swaybg -o '*' -c '#1e1e2e' &
+waybar &
+mako &
+foot --server &

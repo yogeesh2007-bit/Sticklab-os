@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!-- Night OS Labwc config — stacking WM, Openbox-style. Change anything. -->
+<labwc_config>
+  <core>
+    <gap>8</gap>
+  </core>
+  <theme>
+    <name>Clearlooks</name>
+    <cornerRadius>8</cornerRadius>
+    <font><name>sans</name><size>10</size></font>
+  </theme>
+  <keyboard>
+    <default />
+    <!-- Super+Return: terminal | Super+D: launcher | Super+Q: close -->
+    <keybind key="W-Return"><action name="Execute"><command>foot</command></action></keybind>
+    <keybind key="W-d"><action name="Execute"><command>wofi --show drun</command></action></keybind>
+    <keybind key="W-q"><action name="Close" /></keybind>
+    <keybind key="W-f"><action name="ToggleFullscreen" /></keybind>
+    <keybind key="W-Tab"><action name="NextWindow" /></keybind>
+    <keybind key="A-Tab"><action name="NextWindow" /></keybind>
+    <keybind key="W-1"><action name="GoToDesktop"><to>1</to></action></keybind>
+    <keybind key="W-2"><action name="GoToDesktop"><to>2</to></action></keybind>
+    <keybind key="W-3"><action name="GoToDesktop"><to>3</to></action></keybind>
+    <keybind key="W-4"><action name="GoToDesktop"><to>4</to></action></keybind>
+  </keyboard>
+  <mouse>
+    <default />
+  </mouse>
+</labwc_config>

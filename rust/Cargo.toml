@@ -1,0 +1,21 @@
+[package]
+name = "tiny-rust-os"
+version = "0.1.0"
+edition = "2021"
+description = "Rust core userspace for tiny-rust-os (Arch remaster, ~1GB, minimal GUI, USB boot)"
+
+[[bin]]
+name = "rinit"
+path = "src/bin/rinit.rs"
+
+[[bin]]
+name = "rfetch"
+path = "src/bin/rfetch.rs"
+
+[[bin]]
+name = "rsetup"
+path = "src/bin/rsetup.rs"
+
+[[bin]]
+name = "night"
+path = "src/bin/night.rs"

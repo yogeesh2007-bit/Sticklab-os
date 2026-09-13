@@ -1,0 +1,132 @@
+# Night OS package list — coding + learn-Linux + Labwc desktop + GPU, budgeted <2GB USB image.
+# GPU: NVIDIA (open modules + userspace = CUDA-ready) + AMD/Intel Vulkan + OpenCL loader.
+# Languages pre-installed: C/C++, Python, Go, Node, Rust, Java-runtime, Ruby, PHP, Lua, Perl.
+# Full JDK / CUDA toolkit install on demand via `night setup-gpu` / pacman (online).
+
+# --- base system ---
+base
+linux
+linux-firmware
+intel-ucode
+amd-ucode
+sof-firmware
+systemd
+systemd-sysvcompat
+pacman
+glibc
+bash
+coreutils
+shadow
+sudo
+
+# --- shells + editors (choice, not opinionated) ---
+nano
+neovim
+zsh
+zsh-autosuggestions
+zsh-syntax-highlighting
+tmux
+
+# --- coding toolchains (pre-downloaded) ---
+gcc
+make
+pkgconf
+patch
+git
+python
+python-pip
+go
+rust
+rustup
+nodejs
+sqlite
+ruby
+php
+lua
+perl
+jre-openjdk-headless
+
+# --- GPU: NVIDIA CUDA-ready + AMD/Intel + OpenCL ---
+nvidia-open
+nvidia-utils
+vulkan-icd-loader
+vulkan-intel
+vulkan-radeon
+vulkan-nouveau
+ocl-icd
+
+# --- CLI power tools + learn-Linux kit ---
+htop
+btop
+eza
+bat
+fzf
+ripgrep
+fd
+tree
+ncdu
+jq
+strace
+lsof
+file
+unzip
+zip
+iproute2
+iputils
+openssh
+man-db
+man-pages
+tealdeer
+curl
+wget
+gnupg
+github-cli
+just
+cmake
+ninja
+
+# --- hardware + networking (run on every PC) ---
+networkmanager
+iwd
+usbutils
+pciutils
+bluez
+bluez-utils
+
+# --- desktop: Labwc (stacking, customizable) + Wayland helpers ---
+seatd
+mesa
+libxkbcommon
+xkeyboard-config
+fontconfig
+ttf-dejavu
+ttf-jetbrains-mono
+labwc
+waybar
+wofi
+foot
+swaybg
+swaylock
+swayidle
+mako
+grim
+slurp
+wl-clipboard
+polkit
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+
+# --- power efficiency (longer battery: TLP + thermald) + firewall ---
+tlp
+thermald
+cpupower
+ufw
+
+# --- boot + install ---
+efibootmgr
+syslinux
+mkinitcpio
+mkinitcpio-archiso
+archinstall

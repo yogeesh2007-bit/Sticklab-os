@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!-- Night OS right-click menu -->
+<openbox_menu>
+  <menu id="root-menu" label="Night OS">
+    <item label="Terminal (foot)"><action name="Execute"><command>foot</command></action></item>
+    <item label="Editor (nvim)"><action name="Execute"><command>foot -e nvim</command></action></item>
+    <item label="Files (yazi? use ls)"><action name="Execute"><command>foot -e sh -c 'eza -la; exec sh'</command></action></item>
+    <separator />
+    <item label="Sysinfo (rfetch)"><action name="Execute"><command>foot -e sh -c 'rfetch; exec sh'</command></action></item>
+    <item label="Setup (rsetup)"><action name="Execute"><command>foot -e sh -c 'rsetup status; exec sh'</command></action></item>
+    <separator />
+    <item label="Reconfigure labwc"><action name="Reconfigure" /></item>
+    <item label="Exit labwc"><action name="Exit" /></item>
+  </menu>
+</openbox_menu>

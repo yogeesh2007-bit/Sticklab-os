@@ -1,0 +1,19 @@
+# Build outputs — ISOs, USB images, WSL tarballs (fetch from Releases, don't commit)
+out/
+*.iso
+*.img
+*.tar.gz
+
+# Rust build artifacts
+rust/target/
+rust/Cargo.lock
+
+# mkarchiso work dirs
+archiso-tmp/
+
+# Editors / OS noise
+.vscode/
+.idea/
+*~
+.DS_Store
+Thumbs.db
