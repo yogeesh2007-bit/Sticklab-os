@@ -1,6 +1,8 @@
 # 🌙 Night OS
 
 > **A lightweight, ready-to-code Arch-based Linux that fits on a 2GB USB stick — with a Rust-native control center, every major language pre-installed, CUDA-ready NVIDIA support, and a customizable Labwc desktop.**
+>
+> Created and built by **YOGEESHWARAN C**.
 
 ```
  ███╗   ██╗██╗ ██████╗ ██╗  ██╗████████╗
@@ -170,8 +172,13 @@ cargo test                   # 12 unit tests: scaffolder, mem parse, shadow lock
 
 ---
 
+## 👤 Credits
+
+**Night OS — created, designed, and built by YOGEESHWARAN C.**
+Rust control center, desktop theme, package curation, and docs — all crafted for coders and Linux learners.
+
 ## 📜 License & credits
 
 Build scripts + Rust userspace: **MIT** (see [LICENSE](LICENSE)). ISO contents follow their upstream Arch package licenses. Based on [Arch Linux](https://archlinux.org) + [archiso](https://wiki.archlinux.org/title/Archiso). Not affiliated with Arch.
 
-*Darkness, compiled.* ☾
+*Darkness, compiled.* ☾ — by YOGEESHWARAN C

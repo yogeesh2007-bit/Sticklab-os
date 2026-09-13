@@ -3,7 +3,7 @@
 # Rust core userspace (rinit, rfetch, rsetup). See: https://wiki.archlinux.org/title/Archiso
 iso_name="night-os"
 iso_label="NIGHTOS"
-iso_publisher="Night OS <https://example.invalid>"
+iso_publisher="Night OS by YOGEESHWARAN C <https://github.com/yogeesh2007-bit/night-os>"
 iso_application="Night OS live/USB"
 iso_version="$(date +%Y.%m.%d)"
 install_dir="arch"

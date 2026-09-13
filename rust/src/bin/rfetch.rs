@@ -23,7 +23,7 @@ fn logo_lines(coloured: bool) -> Vec<String> {
         r" ██║╚██╗██║██║██║   ██║██╔══██║   ██║   ",
         r" ██║ ╚████║██║╚██████╔╝██║  ██║   ██║   ",
         r" ╚═╝  ╚═══╝╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ",
-        r"        ☾  ·  night os  ·  ★           ",
+        r"   ☾ · night os · by YOGEESHWARAN C · ★  ",
     ];
     raw.iter()
         .map(|l| {
