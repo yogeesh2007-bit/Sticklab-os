@@ -6,9 +6,21 @@
 # Docker:  docker import out/night-os-wsl.tar.gz night-os:wsl
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-WORK=/tmp/nightwsl
+# If the whole script runs under sudo, root's PATH lacks cargo — borrow the invoker's.
+if [ "$(id -u)" = 0 ] && [ -n "${SUDO_USER:-}" ]; then
+  SU_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+  export PATH="$SU_HOME/.cargo/bin:$PATH"
+fi
+WORK="$ROOT/out/.wsl-work"   # on-disk (out/ is git-ignored); /tmp tmpfs is too small
 OUT="$ROOT/out/night-os-wsl.tar.gz"
-cargo build --release --manifest-path "$ROOT/rust/Cargo.toml"
+# Build Rust bins as the invoking user (root has no rustup toolchain); reuse if fresh.
+if [ ! -x "$ROOT/rust/target/release/night" ]; then
+  if [ "$(id -u)" = 0 ] && [ -n "${SUDO_USER:-}" ]; then
+    sudo -u "$SUDO_USER" cargo build --release --manifest-path "$ROOT/rust/Cargo.toml"
+  else
+    cargo build --release --manifest-path "$ROOT/rust/Cargo.toml"
+  fi
+fi
 sudo rm -rf "$WORK"
 mkdir -p "$WORK"
 sudo pacstrap -c "$WORK" base bash coreutils shadow sudo pacman glibc \

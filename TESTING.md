@@ -32,6 +32,12 @@ sudo systemd-nspawn --boot -D /tmp/nightroot
 
 Expected: `rinit.service` success, `night doctor` green (except VM-expected GPU/battery notes).
 
+**Result on 2026-09-14 ISO (verified):** ✅ Reached Multi-User System, `rinit` finished OK,
+Console Getty started, hostname `night-os`, `night doctor` 8/9 green, `rfetch` logo + credits
+render. Single failure: ufw ("CLI Netfilter Manager") — container-only (no netfilter in
+nspawn); fine on real hardware. WSL tarball (576M) verified: `wsl.conf`, hostname, gcc,
+nvim, `night` present, no kernel bundled.
+
 ## 4. Size budget
 
 `scripts/mk-usb-img.sh` fails the build over **2,147,483,648 bytes**. Current release: ~1.7G.

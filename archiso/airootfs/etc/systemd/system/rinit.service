@@ -1,5 +1,5 @@
 [Unit]
-Description=rinit — tiny-rust-os Rust init helper
+Description=rinit — Night OS Rust init helper
 After=network-pre.target
 Before=network.target
 
