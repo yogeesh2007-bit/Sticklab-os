@@ -14,7 +14,7 @@ SIZE=$(stat -c %s "$OUT")
 if [ "$SIZE" -gt 2147483648 ]; then
   echo "WARN: over 2GiB. Trim packages.x86_64 (nvidia-utils/jdk are the big ones)."
 else
-  echo "OK: within ~1GiB budget."
+  echo "OK: within 2GiB budget."
 fi
 echo "--- flash with: sudo dd if=$OUT of=/dev/sdX bs=4M status=progress oflag=sync ---"
 echo "--- (replace /dev/sdX with your USB stick; TRIPLE-CHECK with lsblk first) ---"
