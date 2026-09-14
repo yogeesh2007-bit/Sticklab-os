@@ -1,5 +1,6 @@
-show=drun
-width=480
+# StickLab OS wofi (launcher, Bolt+D) — every line is optional, delete what you don't get.
+show=drun        # drun = apps; try run (commands) or dmenu (piped input)
+width=480        # wider box: 640
 height=320
-prompt=run:
-term=foot
+prompt=run:      # make it yours: prompt=⚡
+term=foot        # terminal used for terminal apps

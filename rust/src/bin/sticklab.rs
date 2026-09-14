@@ -262,6 +262,7 @@ fn learn() {
     println!("  7. `nmtui` + `ip addr` — networking hands-on");
     println!("  8. `sticklab power` + `cpupower frequency-info` — how your CPU sips power");
     println!("  9. edit ~/.config/labwc/rc.xml — your WM, your rules");
+    println!("  10. `rsetup customize` — map of every themeable file (bar, terminal, keys, editor)");
 }
 
 fn setup_gpu() {

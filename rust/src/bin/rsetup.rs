@@ -1,5 +1,5 @@
 //! rsetup — first-boot helper for StickLab OS (std only).
-//! Usage: rsetup status | rsetup coding | sudo rsetup set-hostname NAME | sudo rsetup enable-gui
+//! Usage: rsetup status | rsetup coding | rsetup customize | sudo rsetup set-hostname NAME | sudo rsetup enable-gui
 
 use std::env;
 use std::fs;
@@ -9,6 +9,7 @@ fn help() {
     println!("rsetup — StickLab OS first-boot helper");
     println!("  rsetup status              hostname, network, desktop readiness");
     println!("  rsetup coding              coding toolchain versions (gcc, python, go, node, rust, nvim)");
+    println!("  rsetup customize           map of every themeable file (keys, bar, terminal, editor)");
     println!("  sudo rsetup set-hostname NAME");
     println!("  sudo rsetup enable-gui     enable NetworkManager + seatd, show desktop hint");
 }
@@ -32,7 +33,21 @@ fn status() {
             }
         );
     }
-    println!("hint: Super+Return = terminal, Super+D = launcher, right-click = menu");
+    println!("hint: Bolt+Return = terminal, Bolt+D = launcher, right-click = menu (Bolt is the Alt key)");
+}
+
+fn customize() {
+    println!("StickLab OS customization map (all plain text, edit + reload):");
+    println!("  keys      ~/.config/labwc/rc.xml          Bolt (= Alt) shortcuts, add your own");
+    println!("  menu      ~/.config/labwc/menu.xml        right-click menu entries");
+    println!("  autostart ~/.config/labwc/autostart       wallpaper, bar, notifications, extras");
+    println!("  bar       ~/.config/waybar/config.jsonc + style.css   modules, position, accent #b4befe");
+    println!("  launcher  ~/.config/wofi/config + style.css           size, prompt, accent");
+    println!("  terminal  ~/.config/foot/foot.ini         font, padding, 16 colors + accent pairs");
+    println!("  editor    ~/.config/nvim/init.lua         options, keymaps, plugin pointer");
+    println!("  shell     ~/.zshrc  ~/.bashrc             prompt, aliases, EDITOR");
+    println!("  accent    swap #b4befe (lavender) for #a6e3a1 mint, #fab387 peach, #f38ba8 red");
+    println!("  reload    labwc --reconfigure · pkill -USR2 waybar · new foot for terminal/theme");
 }
 
 fn tool_version(tool: &str, args: &[&str]) -> String {
@@ -73,6 +88,7 @@ fn main() {
     match args[1].as_str() {
         "status" => status(),
         "coding" => coding(),
+        "customize" => customize(),
         "set-hostname" => {
             if args.len() < 3 {
                 eprintln!("usage: sudo rsetup set-hostname NAME");

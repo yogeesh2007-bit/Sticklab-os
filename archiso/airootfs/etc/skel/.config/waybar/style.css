@@ -1,4 +1,6 @@
-/* StickLab OS waybar — dark lavender theme */
+/* StickLab OS waybar — dark lavender theme.
+   THEME IT: the accent is #b4befe (active workspace + selections).
+   Swap it everywhere for mint #a6e3a1, peach #fab387, or red #f38ba8. */
 * { font-family: "JetBrains Mono", monospace; font-size: 12px; }
 window#waybar { background: #1e1e2e; color: #cdd6f4; }
 #workspaces button { color: #6c7086; padding: 0 6px; }

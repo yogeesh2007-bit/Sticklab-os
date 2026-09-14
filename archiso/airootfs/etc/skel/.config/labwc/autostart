@@ -1,5 +1,9 @@
 # StickLab OS Labwc autostart — edit freely, everything is optional.
+# Wallpaper: solid color below, or point at an image: swaybg -o '*' -i ~/Pictures/wall.png &
 swaybg -o '*' -c '#1e1e2e' &
-waybar &
-mako &
-foot --server &
+waybar &       # top bar — kill it for a bare floating setup: remove this line
+mako &         # notifications — remove if you like silence
+foot --server &  # instant terminal popups for Bolt+Return
+# Examples (uncomment to enable):
+# wl-paste --watch cliphist store &   # clipboard history (needs cliphist from AUR)
+# swayidle -w timeout 300 'swaylock -f' &  # auto-lock after 5 min idle

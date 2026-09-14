@@ -11,17 +11,24 @@
   </theme>
   <keyboard>
     <default />
-    <!-- Super+Return: terminal | Super+D: launcher | Super+Q: close -->
-    <keybind key="W-Return"><action name="Execute"><command>foot</command></action></keybind>
-    <keybind key="W-d"><action name="Execute"><command>wofi --show drun</command></action></keybind>
-    <keybind key="W-q"><action name="Close" /></keybind>
-    <keybind key="W-f"><action name="ToggleFullscreen" /></keybind>
-    <keybind key="W-Tab"><action name="NextWindow" /></keybind>
+    <!-- Bolt+Return: terminal | Bolt+D: launcher | Bolt+Q: close -->
+    <!-- Bolt = the Alt key. Super is left alone so a host OS (e.g. Omarchy) keeps it. -->
+    <!-- Add your own: copy any line, change A-x to your keys, then reload labwc to apply. -->
+    <keybind key="A-Return"><action name="Execute"><command>foot</command></action></keybind>
+    <keybind key="A-d"><action name="Execute"><command>wofi --show drun</command></action></keybind>
+    <keybind key="A-q"><action name="Close" /></keybind>
+    <keybind key="A-f"><action name="ToggleFullscreen" /></keybind>
+    <keybind key="A-s"><action name="Execute"><command>sh -c 'mkdir -p ~/Pictures &amp;&amp; grim -g "$(slurp)" ~/Pictures/shot-$(date +%s).png'</command></action></keybind>
+    <keybind key="A-l"><action name="Execute"><command>swaylock -f -c 1e1e2e</command></action></keybind>
+    <!-- Volume keys (uncomment if your keyboard lacks media keys):
+    <keybind key="A-Up"><action name="Execute"><command>wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+</command></action></keybind>
+    <keybind key="A-Down"><action name="Execute"><command>wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-</command></action></keybind> -->
     <keybind key="A-Tab"><action name="NextWindow" /></keybind>
-    <keybind key="W-1"><action name="GoToDesktop"><to>1</to></action></keybind>
-    <keybind key="W-2"><action name="GoToDesktop"><to>2</to></action></keybind>
-    <keybind key="W-3"><action name="GoToDesktop"><to>3</to></action></keybind>
-    <keybind key="W-4"><action name="GoToDesktop"><to>4</to></action></keybind>
+    <keybind key="A-S-Tab"><action name="PreviousWindow" /></keybind>
+    <keybind key="A-1"><action name="GoToDesktop"><to>1</to></action></keybind>
+    <keybind key="A-2"><action name="GoToDesktop"><to>2</to></action></keybind>
+    <keybind key="A-3"><action name="GoToDesktop"><to>3</to></action></keybind>
+    <keybind key="A-4"><action name="GoToDesktop"><to>4</to></action></keybind>
   </keyboard>
   <mouse>
     <default />

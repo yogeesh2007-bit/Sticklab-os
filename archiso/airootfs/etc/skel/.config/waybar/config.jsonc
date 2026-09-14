@@ -1,6 +1,9 @@
+// StickLab OS waybar — plain JSONC, comment and reorder freely, then `pkill -USR2 waybar`.
+// modules-left / center / right: pick from clock cpu memory network pulseaudio battery tray backlight custom/*
+// full widget options: https://github.com/Alexays/Waybar/wiki
 {
   "layer": "top",
-  "position": "top",
+  "position": "top",        // try "bottom" — one word, whole new vibe
   "height": 30,
   "modules-left": ["labwc/workspaces", "labwc/window"],
   "modules-center": ["clock"],

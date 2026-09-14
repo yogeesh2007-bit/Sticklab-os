@@ -136,9 +136,29 @@ StickLab OS is for: **a coder's whole lab on a 2GB stick that boots anywhere, te
 ## 🖥️ Desktop & first boot
 
 - **tty1** → Labwc desktop auto-starts (Waybar top bar, dark lavender theme)
-- **Super+Return** terminal · **Super+D** launcher · **right-click** menu · **Super+Q** close
+- **Bolt+Return** terminal · **Bolt+D** launcher · **right-click** menu · **Bolt+Q** close
+- **Bolt = the Alt key.** Super is deliberately *not* used, so a host OS (like Omarchy) keeps it when you run StickLab OS in a VM — no key fights.
 - Other ttys stay plain console — perfect for learning
 - Make it yours: `~/.config/labwc/rc.xml`, `~/.config/waybar/`, `~/.config/wofi/`, `~/.config/foot/foot.ini`, `~/.config/nvim/init.lua`, `~/.zshrc`
+
+---
+
+## 🎨 Make it yours (customization-first)
+
+Every default config is commented, example-loaded, and safe to break — restore by deleting it (skel defaults return on a fresh boot). On the live system, run `rsetup customize` for this map anytime:
+
+| Want to change | File | How |
+|---|---|---|
+| Keybindings (Bolt = Alt) | `~/.config/labwc/rc.xml` | Copy a line, change `A-x`, run `labwc --reconfigure`. Screenshot (`Bolt+S`) + lock (`Bolt+L`) included |
+| Right-click menu | `~/.config/labwc/menu.xml` | Add `<item>` blocks; a Customize entry is built in |
+| Wallpaper / autostart apps | `~/.config/labwc/autostart` | Swap the `swaybg` color for `-i ~/Pictures/wall.png`, uncomment extras |
+| Top bar layout + theme | `~/.config/waybar/config.jsonc` + `style.css` | Reorder modules, move bar to `bottom`, swap accent `#b4befe` → mint/peach/red (reload: `pkill -USR2 waybar`) |
+| App launcher | `~/.config/wofi/config` + `style.css` | Size, prompt (try `prompt=⚡`), same accent swap |
+| Terminal font + colors | `~/.config/foot/foot.ini` | Font size, 16 colors, ready-made accent pairs in comments |
+| Editor | `~/.config/nvim/init.lua` | Cheat sheet + example keymaps + plugin-manager pointer in comments |
+| Shell prompt + aliases | `~/.zshrc`, `~/.bashrc` | Both shells work; both files say exactly which line to touch |
+
+Rules of the game: **Bolt (Alt)** is the OS modifier — Super is left for your host OS. Accent color lives in exactly two files (`foot.ini`, `waybar`/`wofi` CSS). Nothing is compiled, nothing needs a settings daemon.
 
 ---
 

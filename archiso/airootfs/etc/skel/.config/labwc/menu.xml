@@ -8,6 +8,7 @@
     <separator />
     <item label="Sysinfo (rfetch)"><action name="Execute"><command>foot -e sh -c 'rfetch; exec sh'</command></action></item>
     <item label="Setup (rsetup)"><action name="Execute"><command>foot -e sh -c 'rsetup status; exec sh'</command></action></item>
+    <item label="Customize (themes+keys)"><action name="Execute"><command>foot -e sh -c 'rsetup customize; exec sh'</command></action></item>
     <separator />
     <item label="Reconfigure labwc"><action name="Reconfigure" /></item>
     <item label="Exit labwc"><action name="Exit" /></item>

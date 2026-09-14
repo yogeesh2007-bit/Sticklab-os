@@ -1,4 +1,6 @@
 # StickLab OS default zshrc — pick bash or zsh, both work. Edit freely.
+# MAKE IT YOURS: prompt line below (try: prompt adam2 / prompt bart / prompt redhat),
+# aliases at the bottom, colors via ~/.config/foot/foot.ini. See `rsetup customize`.
 HISTFILE=~/.zsh_history
 HISTSIZE=5000
 SAVEHIST=5000
