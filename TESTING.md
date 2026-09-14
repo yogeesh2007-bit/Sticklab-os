@@ -48,7 +48,23 @@ render. Single failure: ufw ("CLI Netfilter Manager") — container-only (no net
 nspawn); fine on real hardware. WSL tarball (576M) verified: `wsl.conf`, hostname, gcc,
 nvim, `sticklab` present, no kernel bundled.
 
+**Result on 2026-09-14 rebuild (full `./build.sh`, verified in QEMU/KVM with serial
+console):** ✅ archiso hooks mount `/dev/sr0` → bootmnt + loop → airootfs, `rinit`
+started + finished, Multi-User + Graphical targets reached, `sticklab-os login:`
+prompt, hostname `sticklab-os`, TLP + ufw ("CLI Netfilter Manager") finished OK on
+real boot. Zero firstboot-wizard / emergency / panic strings. `sticklab doctor` 8/9
+in nspawn (ufw only), `rsetup wm` shows all 3 WMs installed, `sticklab dualboot`
+reports all 5 tools ready. Serial console was `console=ttyS0` direct-kernel boot;
+normal BIOS/UEFI menu boot uses the same kernel + initramfs.
+
 ## 4. Size budget
 
-`scripts/mk-usb-img.sh` fails the build over **2,147,483,648 bytes**. Current release: ~1.7G.
+`scripts/mk-usb-img.sh` warns the build over **2,147,483,648 bytes**. Current release:
+**1,897,955,328 bytes (1.77 GiB)** — OK, within budget.
 Biggest residents: `nvidia-utils`, `linux-firmware`, `jdk` (JRE only), kernel.
+Budget lessons (2026-09-14): `tio` was dropped from Arch upstream → replaced with
+`picocom`; the initramfs needs `airootfs/etc/mkinitcpio.conf.d/archiso.conf` (else
+the ISO builds but can't boot); keep its HOOKS lean (no `kms` — it drags every GPU
+driver + firmware, incl. nvidia-open, into a 243MB initramfs and breaks the budget);
+mask `systemd-firstboot.service` in the live airootfs (else every boot blocks on a
+timezone wizard, since the live medium is always "first boot").

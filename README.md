@@ -139,7 +139,7 @@ Software isn't the whole story — most new coders touch hardware first. StickLa
 |---|---|
 | **Plug the board in** | USB-serial chips (CH340, CP2102, CH9102, FTDI, PL2303), ST-Link, DFU bootloaders — kernel drivers + firmware on board |
 | **Detect it** | `sticklab boards` names the board (Uno, Nano, ESP32, STM32, Pico, Teensy, micro:bit…), shows its `/dev/ttyUSB*` port and the exact tool to use |
-| **Talk to it** | `tio /dev/ttyUSB0` serial console; `i2cdetect -l` for I2C buses; `sigrok-cli` for logic capture |
+| **Talk to it** | `picocom -b 115200 /dev/ttyUSB0` serial console; `i2cdetect -l` for I2C buses; `sigrok-cli` for logic capture |
 | **Flash it** | `avrdude` (AVR), `openocd` (ARM/STM32/RP2040 debug), `dfu-util` (STM32 DFU) — preinstalled, offline |
 | **Go further (online)** | `sticklab setup-hardware` — ARM + AVR GCC toolchains, Arduino-CLI, esptool via pip, picotool (AUR), Rust MCU targets |
 | **No permission maze** | Live session runs as root, so serial just works. Installed systems: `sudo usermod -aG uucp $USER` + relogin |
@@ -160,7 +160,7 @@ No distro wins at everything. Here's the honest version.
 | **Ubuntu / Fedora** (~5GB ISOs, install-first) | Whole lab fits on a **2GB USB stick**, boots live on any BIOS/UEFI PC with nothing to install. One `sticklab` command replaces a dozen disconnected tools. |
 | Dev distros (**SemiCode OS**, **GenesiOS**) | Smaller (~1.7GB vs 3–10GB), terminal-first instead of a heavy GNOME/KDE desktop, and every config is plain text you can read — it's also a *teaching* OS (`sticklab learn`), not just a tool dump. |
 | Portable USB sellers / **Tails** | Tails buys amnesia at the cost of a usable dev environment. StickLab OS is the opposite trade: a full offline coder's lab (compilers, CUDA userspace, man pages, `strace`) on the same live-USB idea. |
-| Stock Debian / Pi OS for **hardware tinkering** | No serial console, flasher, or debugger out of the box — and no idea what you just plugged in. StickLab OS ships `tio`, `avrdude`, `openocd`, `dfu-util` plus `sticklab boards` board detection. |
+| Stock Debian / Pi OS for **hardware tinkering** | No serial console, flasher, or debugger out of the box — and no idea what you just plugged in. StickLab OS ships `picocom`, `avrdude`, `openocd`, `dfu-util` plus `sticklab boards` board detection. |
 
 ### Complaints users report about other systems → what StickLab does about them
 
@@ -177,7 +177,7 @@ Collected from recurring user complaints (Reddit, forums, reviews, 2024–2026).
 | **Windows 11: forced updates that break things, ads/sponsored apps in Start, telemetry you can't fully off, forced Microsoft account + internet, Copilot that reinstalls itself, default BitLocker locking out dual-booters, clock skew after dual-boot** | **No telemetry, no accounts, no ads, no bundled AI, no forced anything.** No listening services (`sshd` off, firewall on, audited by `sticklab doctor`). Dual-boot is a first-class flow: GRUB + `os-prober` + NTFS on board, `sticklab dualboot` audits ESP/mode/Secure Boot and warns about Fast Startup, BitLocker-suspend, and the Windows clock fix. |
 | **First-30-minutes pain on every fresh Linux install: Wi-Fi dead (Realtek/Broadcom), wrong audio device, stuck at 800×600** | `linux-firmware` + `sof-firmware` + NetworkManager + `iwd` + PipeWire preinstalled; `rsetup status` + `sticklab doctor` triage it in one screen. |
 | **"Fresh distro, still can't compile hello-world offline" — languages/IDEs missing until you find internet** | 10 language toolchains + git/cmake/ninja/man/tldr preinstalled and verified by `sticklab langs`; `sticklab new rust demo` scaffolds offline. Heavy extras stay one documented command away (`setup-gpu`, `setup-hardware`) to protect the 2GB budget. |
-| **"Plug an Arduino/ESP32/STM32/Pico into fresh Linux: silence" — no serial console, flasher, debugger, permission maze** | Hardware bench on board: `tio`, `avrdude`, `openocd`, `dfu-util`, serial drivers + firmware, and `sticklab boards` names the plugged board + port + tool. |
+| **"Plug an Arduino/ESP32/STM32/Pico into fresh Linux: silence" — no serial console, flasher, debugger, permission maze** | Hardware bench on board: `picocom`, `avrdude`, `openocd`, `dfu-util`, serial drivers + firmware, and `sticklab boards` names the plugged board + port + tool. |
 
 ### Where the others win (real weaknesses, no spin)
 

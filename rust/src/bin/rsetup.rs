@@ -170,7 +170,7 @@ fn coding() {
     println!("  nvim   {}", tool_version("nvim", &["--version"]));
     println!("  git    {}", tool_version("git", &["--version"]));
     println!("StickLab OS hardware bench:");
-    println!("  tio     {}", tool_version("tio", &["--version"]));
+    println!("  picocom {}", tool_version("picocom", &["--help"]));
     println!("  openocd {}", tool_version("openocd", &["--version"]));
     println!("  avrdude {}", tool_version("avrdude", &["--version"]));
     println!("plug a board in and run `sticklab boards` to detect it");

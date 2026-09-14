@@ -89,7 +89,7 @@ ninja
 # Offline on the ISO: serial console, flashing, debug, I2C, logic capture.
 # Heavy compilers (ARM/AVR GCC, Arduino-CLI, esptool) stay one command away:
 # `sticklab setup-hardware` (2GB budget). Detect boards with `sticklab boards`.
-tio
+picocom
 openocd
 avrdude
 dfu-util

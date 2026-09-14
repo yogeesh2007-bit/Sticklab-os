@@ -288,21 +288,21 @@ fn identify_board(vid: &str, pid: &str) -> Option<(&'static str, &'static str)> 
         }
         ("0403", "6001") => Some((
             "FTDI serial (Arduino Nano / FTDI cable)",
-            "tio /dev/ttyUSB0 + arduino-cli",
+            "picocom /dev/ttyUSB0 + arduino-cli",
         )),
         ("1a86", "7523") => Some((
             "CH340 serial (clone Nano / NodeMCU / ESP8266)",
-            "tio + esptool (sticklab setup-hardware)",
+            "picocom + esptool (sticklab setup-hardware)",
         )),
         ("1a86", "55d4") => Some((
             "CH9102 serial (newer ESP32 boards)",
-            "tio + esptool (sticklab setup-hardware)",
+            "picocom + esptool (sticklab setup-hardware)",
         )),
         ("10c4", "ea60") => Some((
             "CP2102 serial (ESP32 devkit / many boards)",
-            "tio + esptool (sticklab setup-hardware)",
+            "picocom + esptool (sticklab setup-hardware)",
         )),
-        ("067b", "2303") => Some(("PL2303 serial cable", "tio /dev/ttyUSB0")),
+        ("067b", "2303") => Some(("PL2303 serial cable", "picocom /dev/ttyUSB0")),
         ("303a", "1001") => Some((
             "Espressif native USB (ESP32-S2/S3)",
             "esptool (sticklab setup-hardware)",
@@ -315,13 +315,13 @@ fn identify_board(vid: &str, pid: &str) -> Option<(&'static str, &'static str)> 
         ("2e8a", "0003") => Some(("RP2040 USB-boot (Pico)", "drag-drop .uf2 or picotool")),
         ("2e8a", "0005") => Some((
             "RP2040 USB serial (Pico SDK / MicroPython)",
-            "tio /dev/ttyACM0",
+            "picocom /dev/ttyACM0",
         )),
         ("239a", _) => Some(("Adafruit UF2 bootloader (SAMD/nRF/RP2040)", "drag-drop .uf2")),
         ("16c0", "0478") | ("16c0", "0483") => {
-            Some(("Teensy (HalfKay / Serial)", "teensy_loader_cli + tio"))
+            Some(("Teensy (HalfKay / Serial)", "teensy_loader_cli + picocom"))
         }
-        ("0d28", "0204") => Some(("BBC micro:bit", "drag-drop .hex + tio /dev/ttyACM0")),
+        ("0d28", "0204") => Some(("BBC micro:bit", "drag-drop .hex + picocom /dev/ttyACM0")),
         _ => None,
     }
 }
@@ -356,7 +356,7 @@ fn boards() {
             match identify_board(&vid, &pid) {
                 Some((board, tool)) => println!("  {name}\n    → {board} — {tool}"),
                 None => println!(
-                    "  {name}\n    → unknown chip — `lsusb -v`, then `tio` if it makes a /dev/ttyUSB* node"
+                    "  {name}\n    → unknown chip — `lsusb -v`, then `picocom` if it makes a /dev/ttyUSB* node"
                 ),
             }
         }
@@ -378,11 +378,11 @@ fn boards() {
         println!("  serial ports: none (/dev/ttyUSB* /dev/ttyACM*)");
     } else {
         for p in &ports {
-            println!("  serial port: {p} — console: tio {p}");
+            println!("  serial port: {p} — console: picocom -b 115200 {p}");
         }
     }
     for (label, bin) in [
-        ("serial console", "tio"),
+        ("serial console", "picocom"),
         ("AVR flash", "avrdude"),
         ("ARM debug", "openocd"),
         ("DFU flash", "dfu-util"),
@@ -400,7 +400,7 @@ fn boards() {
 
 fn setup_hardware() {
     println!("StickLab OS hardware-bench extras (needs internet):");
-    println!("  On the ISO already : tio openocd avrdude dfu-util i2c-tools sigrok-cli");
+    println!("  On the ISO already : picocom openocd avrdude dfu-util i2c-tools sigrok-cli");
     println!("  ARM Cortex-M       : sudo pacman -S arm-none-eabi-gcc arm-none-eabi-gdb arm-none-eabi-newlib");
     println!("  AVR (Uno/Nano)     : sudo pacman -S avr-gcc avr-libc arduino-cli  (avrdude already on board)");
     println!("  ESP32 / ESP8266    : pip install esptool adafruit-ampy  (then: esptool.py --port /dev/ttyUSB0 flash_id)");
