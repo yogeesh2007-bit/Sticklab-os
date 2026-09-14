@@ -25,7 +25,9 @@ fn ensure_mounted(target: &str, fstype: &str, source: &str) {
         .status();
     match st {
         Ok(s) if s.success() => println!("[rinit] mounted {target}"),
-        _ => eprintln!("[rinit] WARN: could not mount {target} (may already be managed by systemd)"),
+        _ => {
+            eprintln!("[rinit] WARN: could not mount {target} (may already be managed by systemd)")
+        }
     }
 }
 
@@ -41,7 +43,10 @@ fn main() {
     // 2. Banner with basic facts.
     let kernel = fs::read_to_string("/proc/version").unwrap_or_else(|_| "unknown kernel".into());
     println!("[rinit] {} wielding Rust core", kernel.trim());
-    println!("[rinit] pid={} — handing control to systemd", std::process::id());
+    println!(
+        "[rinit] pid={} — handing control to systemd",
+        std::process::id()
+    );
 
     // 3. If a compositor + foot exist, note desktop readiness (session picker via live user .bash_profile).
     let labwc = Path::new("/usr/bin/labwc").exists();

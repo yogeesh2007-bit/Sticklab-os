@@ -37,7 +37,7 @@ Most tiny distros make you choose: **small** *or* **ready**. StickLab OS refuses
 |---|---|
 | Runs on **every PC** | Linux kernel + full firmware set, Intel/AMD microcode, BIOS **and** UEFI boot, Intel/AMD/NVIDIA GPUs |
 | **CUDA-ready** | NVIDIA open modules + userspace on board (`nvidia-smi` works); full toolkit one command away |
-| All **languages pre-installed** | C/C++, Python, Go, Node, **Rust**, Java, Ruby, PHP, Lua, Perl — offline, verified by `sticklab langs` |
+| All **languages pre-installed** | C/C++, Python, Go, Node, **Rust** (via rustup — `rustup toolchain install stable`), Java, Ruby, PHP, Lua, Perl — offline except the one-time Rust toolchain fetch, verified by `sticklab langs` |
 | **Hardware bench included** | Serial console, AVR/ARM flashing, DFU, I2C, logic capture on board; `sticklab boards` detects Uno, Nano, ESP32, STM32, Pico, Teensy, micro:bit — heavy compilers one command away |
 | Modern **coder dependencies** | git, cmake, ninja, curl, gh, just, man pages, tldr, btop, fzf, ripgrep… |
 | **Cool + customizable**, not opinionated | Labwc stacking desktop (Openbox-style), Waybar, Wofi, Foot — every config plain text in `~/.config` |
@@ -176,7 +176,7 @@ Collected from recurring user complaints (Reddit, forums, reviews, 2024–2026).
 | **Mint: base/kernel months behind (new GPUs suffer), X11-only with no mature Wayland (multi-monitor refresh, scaling, HDR broken), weak for gaming** | **Wayland-first, current Arch base:** 3 wlroots compositors with per-monitor configs, `xorg-xwayland` for legacy apps, new kernels/firmware via rolling base, Vulkan ICDs for AMD/Intel/Nouveau + NVIDIA userspace. |
 | **Windows 11: forced updates that break things, ads/sponsored apps in Start, telemetry you can't fully off, forced Microsoft account + internet, Copilot that reinstalls itself, default BitLocker locking out dual-booters, clock skew after dual-boot** | **No telemetry, no accounts, no ads, no bundled AI, no forced anything.** No listening services (`sshd` off, firewall on, audited by `sticklab doctor`). Dual-boot is a first-class flow: GRUB + `os-prober` + NTFS on board, `sticklab dualboot` audits ESP/mode/Secure Boot and warns about Fast Startup, BitLocker-suspend, and the Windows clock fix. |
 | **First-30-minutes pain on every fresh Linux install: Wi-Fi dead (Realtek/Broadcom), wrong audio device, stuck at 800×600** | `linux-firmware` + `sof-firmware` + NetworkManager + `iwd` + PipeWire preinstalled; `rsetup status` + `sticklab doctor` triage it in one screen. |
-| **"Fresh distro, still can't compile hello-world offline" — languages/IDEs missing until you find internet** | 10 language toolchains + git/cmake/ninja/man/tldr preinstalled and verified by `sticklab langs`; `sticklab new rust demo` scaffolds offline. Heavy extras stay one documented command away (`setup-gpu`, `setup-hardware`) to protect the 2GB budget. |
+| **"Fresh distro, still can't compile hello-world offline" — languages/IDEs missing until you find internet** | 9 language toolchains + git/cmake/ninja/man/tldr preinstalled and verified by `sticklab langs` (Rust joins via one `rustup toolchain install stable`); `sticklab new rust demo` scaffolds offline. Heavy extras stay one documented command away (`setup-gpu`, `setup-hardware`) to protect the 2GB budget. |
 | **"Plug an Arduino/ESP32/STM32/Pico into fresh Linux: silence" — no serial console, flasher, debugger, permission maze** | Hardware bench on board: `picocom`, `avrdude`, `openocd`, `dfu-util`, serial drivers + firmware, and `sticklab boards` names the plugged board + port + tool. |
 
 ### Where the others win (real weaknesses, no spin)
@@ -244,7 +244,7 @@ Rules of the game: **Bolt (Alt)** is the OS modifier — Super is left for your 
 | Live session | root autologin, physical console only | Standard live-ISO pattern; installed systems use `archinstall` + own users |
 | SSH daemon | **disabled** | No remote entry; enable explicitly: `systemctl enable --now sshd` |
 | Firewall | **ufw enabled**, deny incoming | Audited by `sticklab doctor` |
-| Verification | `cargo test` (15 unit tests), ISO content audit, `systemd-nspawn` boot test | See [TESTING](TESTING.md) |
+| Verification | `cargo test` (17 unit tests), ISO content audit, `systemd-nspawn` boot test | See [TESTING](TESTING.md) |
 
 ---
 

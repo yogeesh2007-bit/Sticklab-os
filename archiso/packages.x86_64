@@ -1,6 +1,6 @@
 # StickLab OS package list — coding + learn-Linux + 3 Wayland desktops + GPU, budgeted <2GB USB image.
 # GPU: NVIDIA (open modules + userspace = CUDA-ready) + AMD/Intel Vulkan + OpenCL loader.
-# Languages pre-installed: C/C++, Python, Go, Node, Rust, Java-runtime, Ruby, PHP, Lua, Perl.
+# Languages pre-installed: C/C++, Python, Go, Node, Rust (via rustup), Java-runtime, Ruby, PHP, Lua, Perl.
 # Full JDK / CUDA toolkit install on demand via `sticklab setup-gpu` / pacman (online).
 
 # --- base system ---
@@ -35,8 +35,11 @@ patch
 git
 python
 python-pip
+# NOTE: `rust` and `rustup` conflict — pacman silently drops `rust`. We ship
+# `rustup` (multi-toolchain + MCU targets); first toolchain is one command away:
+# `rustup toolchain install stable`. So `rustc`/`cargo` show as pending in
+# `sticklab langs` until then — by design, not a missing package.
 go
-rust
 rustup
 nodejs
 sqlite

@@ -88,18 +88,27 @@ fn dashboard() {
     let os = fs::read_to_string("/etc/os-release")
         .ok()
         .and_then(|c| {
-            c.lines()
-                .find(|l| l.starts_with("PRETTY_NAME="))
-                .map(|l| l.trim_start_matches("PRETTY_NAME=").trim_matches('"').to_string())
+            c.lines().find(|l| l.starts_with("PRETTY_NAME=")).map(|l| {
+                l.trim_start_matches("PRETTY_NAME=")
+                    .trim_matches('"')
+                    .to_string()
+            })
         })
         .unwrap_or_else(|| "StickLab OS".into());
     let kernel = run("uname", &["-r"]).unwrap_or_else(|| "?".into());
     let gpu_line = Command::new("sh")
-        .args(["-c", "lspci 2>/dev/null | grep -iE 'vga|3d|display' | head -3"])
+        .args([
+            "-c",
+            "lspci 2>/dev/null | grep -iE 'vga|3d|display' | head -3",
+        ])
         .output()
         .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
         .unwrap_or_default();
-    let gpu = if gpu_line.is_empty() { "no GPU detected (VM?)".to_string() } else { gpu_line.replace('\n', " | ") };
+    let gpu = if gpu_line.is_empty() {
+        "no GPU detected (VM?)".to_string()
+    } else {
+        gpu_line.replace('\n', " | ")
+    };
     let cuda = if have("/usr/bin/nvidia-smi") {
         run("nvidia-smi", &["--query-gpu=name", "--format=csv,noheader"])
             .unwrap_or_else(|| "NVIDIA driver present, no GPU visible".into())
@@ -118,7 +127,10 @@ fn dashboard() {
 fn gpu() {
     println!("StickLab OS GPU report (x86_64 PCs: NVIDIA / AMD / Intel):");
     let lspci = Command::new("sh")
-        .args(["-c", "lspci -nnk 2>/dev/null | grep -iA3 -E 'vga|3d|display' || echo 'lspci: no GPU lines'"])
+        .args([
+            "-c",
+            "lspci -nnk 2>/dev/null | grep -iA3 -E 'vga|3d|display' || echo 'lspci: no GPU lines'",
+        ])
         .output()
         .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
         .unwrap_or_else(|_| "lspci unavailable".into());
@@ -167,6 +179,12 @@ fn langs() {
     println!("full JDK / CUDA toolkit (online): `sticklab setup-gpu`");
 }
 
+/// True when `name` is safe to scaffold into: non-empty, relative, no `..`
+/// escape out of the current directory. Pure — unit tested.
+fn safe_project_name(name: &str) -> bool {
+    !name.is_empty() && !Path::new(name).is_absolute() && !name.split('/').any(|c| c == "..")
+}
+
 fn new_project() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 4 {
@@ -174,6 +192,10 @@ fn new_project() {
         std::process::exit(2);
     }
     let (tpl, name) = (args[2].as_str(), args[3].as_str());
+    if !safe_project_name(name) {
+        eprintln!("error: '{name}' is not a safe project path (relative paths only, no '..')");
+        std::process::exit(2);
+    }
     if Path::new(name).exists() {
         eprintln!("error: '{name}' already exists");
         std::process::exit(1);
@@ -182,44 +204,132 @@ fn new_project() {
         eprintln!("unknown template '{tpl}' (rust|python|go|node|c|java)");
         std::process::exit(2);
     });
-    fs::create_dir_all(name).expect("mkdir");
+    if let Err(e) = fs::create_dir_all(name) {
+        eprintln!("error: cannot create '{name}': {e}");
+        std::process::exit(1);
+    }
     for (rel, content) in &files {
         let dest = format!("{name}/{rel}");
         if let Some(parent) = Path::new(&dest).parent() {
-            fs::create_dir_all(parent).ok();
+            if let Err(e) = fs::create_dir_all(parent) {
+                eprintln!("error: cannot create '{dest}': {e}");
+                std::process::exit(1);
+            }
         }
-        fs::write(&dest, content).expect("write scaffold file");
+        if let Err(e) = fs::write(&dest, content) {
+            eprintln!("error: cannot write '{dest}': {e}");
+            std::process::exit(1);
+        }
     }
-    println!("scaffolded {tpl} project in ./{name} ({} files)", files.len());
+    println!(
+        "scaffolded {tpl} project in ./{name} ({} files)",
+        files.len()
+    );
 }
 
 fn doctor() {
     println!("StickLab OS doctor (health + security):");
     let mut ok = true;
     let check = |label: &str, good: bool, hint: &str, ok: &mut bool| {
-        println!("  [{}] {label}{}", if good { "OK" } else { "!!" }, if good { String::new() } else { format!(" → {hint}") });
+        println!(
+            "  [{}] {label}{}",
+            if good { "OK" } else { "!!" },
+            if good {
+                String::new()
+            } else {
+                format!(" → {hint}")
+            }
+        );
         if !good {
             *ok = false;
         }
     };
-    check("root filesystem writable", have("/usr/bin/pacman"), "are you on the live ISO?", &mut ok);
+    check(
+        "root filesystem writable",
+        have("/usr/bin/pacman"),
+        "are you on the live ISO?",
+        &mut ok,
+    );
     let mem = fs::read_to_string("/proc/meminfo").unwrap_or_default();
-    check("RAM >= 2GB for desktop", mem_total_kb(&mem) >= 2_000_000, "use tty (Ctrl+Alt+F2) instead of the desktop", &mut ok);
-    let avail = Command::new("sh").args(["-c", "df -m / | awk 'NR==2{print $4}'"]).output().map(|o| String::from_utf8_lossy(&o.stdout).trim().parse::<u64>().unwrap_or(0)).unwrap_or(0);
-    check("disk space >= 512MB free", avail >= 512, "clean pacman cache: sudo pacman -Scc", &mut ok);
-    check("window manager installed (labwc/sway/hyprland)", have("/usr/bin/labwc") || have("/usr/bin/sway") || have("/usr/bin/Hyprland"), "reinstall profile or use foot on tty (`rsetup wm` to switch)", &mut ok);
-    check("NetworkManager present", have("/usr/bin/NetworkManager") || have("/usr/bin/nmtui"), "use `nmtui` / check cable", &mut ok);
-    check("GPU userspace (nvidia-utils or mesa)", have("/usr/lib/libcuda.so.1") || have("/usr/lib/dri/radeonsi_dri.so") || have("/usr/lib/libGLX_mesa.so.0"), "run `sticklab gpu`", &mut ok);
+    check(
+        "RAM >= 2GB for desktop",
+        mem_total_kb(&mem) >= 2_000_000,
+        "use tty (Ctrl+Alt+F2) instead of the desktop",
+        &mut ok,
+    );
+    let avail = Command::new("sh")
+        .args(["-c", "df -m / | awk 'NR==2{print $4}'"])
+        .output()
+        .map(|o| {
+            String::from_utf8_lossy(&o.stdout)
+                .trim()
+                .parse::<u64>()
+                .unwrap_or(0)
+        })
+        .unwrap_or(0);
+    check(
+        "disk space >= 512MB free",
+        avail >= 512,
+        "clean pacman cache: sudo pacman -Scc",
+        &mut ok,
+    );
+    check(
+        "window manager installed (labwc/sway/hyprland)",
+        have("/usr/bin/labwc") || have("/usr/bin/sway") || have("/usr/bin/Hyprland"),
+        "reinstall profile or use foot on tty (`rsetup wm` to switch)",
+        &mut ok,
+    );
+    check(
+        "NetworkManager present",
+        have("/usr/bin/NetworkManager") || have("/usr/bin/nmtui"),
+        "use `nmtui` / check cable",
+        &mut ok,
+    );
+    check(
+        "GPU userspace (nvidia-utils or mesa)",
+        have("/usr/lib/libcuda.so.1")
+            || have("/usr/lib/dri/radeonsi_dri.so")
+            || have("/usr/lib/libGLX_mesa.so.0"),
+        "run `sticklab gpu`",
+        &mut ok,
+    );
     // --- security surface ---
-    let sshd_on = Command::new("systemctl").args(["is-enabled", "sshd"]).output().map(|o| String::from_utf8_lossy(&o.stdout).trim() == "enabled").unwrap_or(false);
-    check("sshd disabled by default (no remote entry)", !sshd_on, "sudo systemctl disable --now sshd", &mut ok);
-    let ufw_on = Command::new("sh").args(["-c", "ufw status 2>/dev/null | grep -q 'Status: active'"]).status().map(|s| s.success()).unwrap_or(false);
+    let sshd_on = Command::new("systemctl")
+        .args(["is-enabled", "sshd"])
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim() == "enabled")
+        .unwrap_or(false);
+    check(
+        "sshd disabled by default (no remote entry)",
+        !sshd_on,
+        "sudo systemctl disable --now sshd",
+        &mut ok,
+    );
+    let ufw_on = Command::new("sh")
+        .args(["-c", "ufw status 2>/dev/null | grep -q 'Status: active'"])
+        .status()
+        .map(|s| s.success())
+        .unwrap_or(false);
     check("firewall active (ufw)", ufw_on, "sudo ufw enable", &mut ok);
     match fs::read_to_string("/etc/shadow") {
-        Ok(sh) => check("root password locked (live-safe)", account_locked(&sh, "root").unwrap_or(false), "sudo passwd -l root", &mut ok),
-        Err(_) => println!("  [--] root password lock: unreadable (run doctor as root for this check)"),
+        Ok(sh) => check(
+            "root password locked (live-safe)",
+            account_locked(&sh, "root").unwrap_or(false),
+            "sudo passwd -l root",
+            &mut ok,
+        ),
+        Err(_) => {
+            println!("  [--] root password lock: unreadable (run doctor as root for this check)")
+        }
     }
-    println!("{}", if ok { "all green. happy hacking." } else { "issues above — hints included. `sticklab learn` teaches the why." });
+    println!(
+        "{}",
+        if ok {
+            "all green. happy hacking."
+        } else {
+            "issues above — hints included. `sticklab learn` teaches the why."
+        }
+    );
 }
 
 fn power() {
@@ -231,17 +341,33 @@ fn power() {
         .map(|l| l.split(':').nth(1).unwrap_or("?").trim().to_string())
         .unwrap_or_else(|| "?".into());
     println!("  cpu: {cpu}");
-    let gov = fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor").unwrap_or_else(|_| "unknown (bare metal only)".into());
-    let drv = fs::read_to_string("/sys/devices/system/cpu/cpufreq/policy0/scaling_driver").unwrap_or_else(|_| "unknown".into());
+    let gov = fs::read_to_string("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
+        .unwrap_or_else(|_| "unknown (bare metal only)".into());
+    let drv = fs::read_to_string("/sys/devices/system/cpu/cpufreq/policy0/scaling_driver")
+        .unwrap_or_else(|_| "unknown".into());
     println!("  governor: {}  driver: {}", gov.trim(), drv.trim());
-    let bat: Vec<_> = fs::read_dir("/sys/class/power_supply").ok().map(|rd| {
-        rd.flatten().filter_map(|e| {
-            let base = e.path();
-            let cap = fs::read_to_string(base.join("capacity")).ok()?.trim().to_string();
-            let st = fs::read_to_string(base.join("status")).ok()?.trim().to_string();
-            Some(format!("{}: {cap}% ({st})", e.file_name().to_string_lossy()))
-        }).collect()
-    }).unwrap_or_default();
+    let bat: Vec<_> = fs::read_dir("/sys/class/power_supply")
+        .ok()
+        .map(|rd| {
+            rd.flatten()
+                .filter_map(|e| {
+                    let base = e.path();
+                    let cap = fs::read_to_string(base.join("capacity"))
+                        .ok()?
+                        .trim()
+                        .to_string();
+                    let st = fs::read_to_string(base.join("status"))
+                        .ok()?
+                        .trim()
+                        .to_string();
+                    Some(format!(
+                        "{}: {cap}% ({st})",
+                        e.file_name().to_string_lossy()
+                    ))
+                })
+                .collect()
+        })
+        .unwrap_or_default();
     if bat.is_empty() {
         println!("  battery: none detected (desktop/VM)");
     } else {
@@ -249,9 +375,13 @@ fn power() {
             println!("  battery: {b}");
         }
     }
-    let tlp = run("tlp-stat", &["-s"]).map(|s| s.lines().nth(1).unwrap_or("").trim().to_string()).unwrap_or_else(|| "tlp not running? sudo systemctl enable --now tlp".into());
+    let tlp = run("tlp-stat", &["-s"])
+        .map(|s| s.lines().nth(1).unwrap_or("").trim().to_string())
+        .unwrap_or_else(|| "tlp not running? sudo systemctl enable --now tlp".into());
     println!("  tlp: {tlp}");
-    println!("  tips: TLP+thermald pre-enabled · `cpupower frequency-info` · dim via waybar/battery");
+    println!(
+        "  tips: TLP+thermald pre-enabled · `cpupower frequency-info` · dim via waybar/battery"
+    );
 }
 
 fn learn() {
@@ -264,8 +394,12 @@ fn learn() {
     println!("  6. `btop` + `ls /proc` — processes, then the virtual filesystem");
     println!("  7. `nmtui` + `ip addr` — networking hands-on");
     println!("  8. `sticklab power` + `cpupower frequency-info` — how your CPU sips power");
-    println!("  9. edit ~/.config/labwc/rc.xml — your WM, your rules (`rsetup wm` to try sway/hyprland)");
-    println!("  10. `rsetup customize` — map of every themeable file (bar, terminal, keys, editor)");
+    println!(
+        "  9. edit ~/.config/labwc/rc.xml — your WM, your rules (`rsetup wm` to try sway/hyprland)"
+    );
+    println!(
+        "  10. `rsetup customize` — map of every themeable file (bar, terminal, keys, editor)"
+    );
 }
 
 fn setup_gpu() {
@@ -283,9 +417,7 @@ fn identify_board(vid: &str, pid: &str) -> Option<(&'static str, &'static str)> 
         vid.trim().to_lowercase().as_str(),
         pid.trim().to_lowercase().as_str(),
     ) {
-        ("2341", "0043") | ("2a03", "0043") => {
-            Some(("Arduino Uno R3", "arduino-cli / avrdude"))
-        }
+        ("2341", "0043") | ("2a03", "0043") => Some(("Arduino Uno R3", "arduino-cli / avrdude")),
         ("0403", "6001") => Some((
             "FTDI serial (Arduino Nano / FTDI cable)",
             "picocom /dev/ttyUSB0 + arduino-cli",
@@ -317,7 +449,10 @@ fn identify_board(vid: &str, pid: &str) -> Option<(&'static str, &'static str)> 
             "RP2040 USB serial (Pico SDK / MicroPython)",
             "picocom /dev/ttyACM0",
         )),
-        ("239a", _) => Some(("Adafruit UF2 bootloader (SAMD/nRF/RP2040)", "drag-drop .uf2")),
+        ("239a", _) => Some((
+            "Adafruit UF2 bootloader (SAMD/nRF/RP2040)",
+            "drag-drop .uf2",
+        )),
         ("16c0", "0478") | ("16c0", "0483") => {
             Some(("Teensy (HalfKay / Serial)", "teensy_loader_cli + picocom"))
         }
@@ -346,8 +481,7 @@ fn boards() {
                 continue;
             }
             found = true;
-            let prod = fs::read_to_string(base.join("product"))
-                .unwrap_or_default();
+            let prod = fs::read_to_string(base.join("product")).unwrap_or_default();
             let name = if prod.trim().is_empty() {
                 format!("{vid}:{pid}")
             } else {
@@ -431,13 +565,23 @@ fn parse_os_prober(output: &str) -> Vec<(String, String)> {
             }
             let mut parts = l.splitn(2, ':');
             let dev = parts.next()?.trim();
-            let label = parts.next().unwrap_or("").split(':').next().unwrap_or("").trim();
+            let label = parts
+                .next()
+                .unwrap_or("")
+                .split(':')
+                .next()
+                .unwrap_or("")
+                .trim();
             if dev.is_empty() {
                 return None;
             }
             Some((
                 dev.to_string(),
-                if label.is_empty() { "unknown OS".to_string() } else { label.to_string() },
+                if label.is_empty() {
+                    "unknown OS".to_string()
+                } else {
+                    label.to_string()
+                },
             ))
         })
         .collect()
@@ -453,7 +597,9 @@ fn find_esp_mounts(mounts: &str) -> Vec<String> {
             let mnt = f.next()?;
             let fstype = f.next()?;
             let lower = mnt.to_lowercase();
-            if (lower.contains("efi") || lower == "/boot") && (fstype == "vfat" || fstype == "fat32") {
+            if (lower.contains("efi") || lower == "/boot")
+                && (fstype == "vfat" || fstype == "fat32")
+            {
                 Some(mnt.to_string())
             } else {
                 None
@@ -470,7 +616,9 @@ fn dualboot() {
     println!("  firmware boot mode: {mode}");
     if !efi {
         println!("    → booted via legacy BIOS/CSM. Most modern PCs (Windows 10/11) use UEFI:");
-        println!("      reboot the stick via the UEFI: entry in the firmware boot menu, then reinstall.");
+        println!(
+            "      reboot the stick via the UEFI: entry in the firmware boot menu, then reinstall."
+        );
     }
     // --- 2. Secure Boot ---
     let sb = Command::new("sh")
@@ -479,11 +627,15 @@ fn dualboot() {
         .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
         .unwrap_or_default();
     if sb.to_lowercase().contains("enabled") {
-        println!("  Secure Boot: ENABLED → StickLab OS (plain archiso) needs it OFF in firmware setup.");
+        println!(
+            "  Secure Boot: ENABLED → StickLab OS (plain archiso) needs it OFF in firmware setup."
+        );
     } else if sb.is_empty() || sb == "none" {
         println!("  Secure Boot: unknown from here — if install/boot fails, disable it in firmware setup.");
     } else if sb.to_lowercase().contains("secure boot") {
-        println!("  {sb} (if it says enabled, StickLab OS needs Secure Boot OFF in firmware setup)");
+        println!(
+            "  {sb} (if it says enabled, StickLab OS needs Secure Boot OFF in firmware setup)"
+        );
     } else {
         println!("  Secure Boot: {sb}");
     }
@@ -494,7 +646,9 @@ fn dualboot() {
         println!("  ESP: not mounted (normal on live ISO) — at install, REUSE the existing FAT32 ESP as /boot (do NOT format it).");
     } else if !esps.is_empty() {
         for m in &esps {
-            println!("  ESP mounted: {m} (reuse as /boot on UEFI installs, never format a shared ESP)");
+            println!(
+                "  ESP mounted: {m} (reuse as /boot on UEFI installs, never format a shared ESP)"
+            );
         }
     }
     // --- 4. other OSes ---
@@ -506,7 +660,9 @@ fn dualboot() {
             .unwrap_or_default();
         let found = parse_os_prober(&out);
         if found.is_empty() {
-            println!("  other OSes: none detected (fresh disk? or NTFS partitions not yet visible).");
+            println!(
+                "  other OSes: none detected (fresh disk? or NTFS partitions not yet visible)."
+            );
         } else {
             for (dev, label) in &found {
                 println!("  found: {label} on {dev}");
@@ -534,11 +690,17 @@ fn dualboot() {
     println!("  install recipe (safe dual-boot):");
     println!("    1. In Windows: disable Fast Startup + BitLocker-suspend, shrink C: to free space, note the ESP.");
     println!("    2. Boot StickLab OS in the SAME mode as the other OS (UEFI ↔ UEFI).");
-    println!("    3. Run `archinstall` → manual partitioning → reuse existing ESP as /boot (no format),");
+    println!(
+        "    3. Run `archinstall` → manual partitioning → reuse existing ESP as /boot (no format),"
+    );
     println!("       install StickLab OS into the FREE space only, bootloader = GRUB.");
     println!("    4. After install: set GRUB_DISABLE_OS_PROBER=false in /etc/default/grub, run");
-    println!("       `sudo grub-mkconfig -o /boot/grub/grub.cfg` so the other OS appears in the menu.");
-    println!("    5. Windows shows wrong clock after? `timedatectl set-local-rtc 1` on Linux side.");
+    println!(
+        "       `sudo grub-mkconfig -o /boot/grub/grub.cfg` so the other OS appears in the menu."
+    );
+    println!(
+        "    5. Windows shows wrong clock after? `timedatectl set-local-rtc 1` on Linux side."
+    );
 }
 
 fn main() {
@@ -587,7 +749,12 @@ mod tests {
         let names: Vec<_> = files.iter().map(|(p, _)| p.as_str()).collect();
         assert!(names.contains(&"Cargo.toml"));
         assert!(names.contains(&"src/main.rs"));
-        assert!(files.iter().find(|(p, _)| p == "Cargo.toml").unwrap().1.contains("name = \"demo\""));
+        assert!(files
+            .iter()
+            .find(|(p, _)| p == "Cargo.toml")
+            .unwrap()
+            .1
+            .contains("name = \"demo\""));
     }
 
     #[test]
@@ -606,7 +773,10 @@ mod tests {
     fn account_locked_detects_star_bang() {
         assert_eq!(account_locked("root:*:14871::::::\n", "root"), Some(true));
         assert_eq!(account_locked("root:!:14871::::::\n", "root"), Some(true));
-        assert_eq!(account_locked("root:$6$salt$hash:14871::::::\n", "root"), Some(false));
+        assert_eq!(
+            account_locked("root:$6$salt$hash:14871::::::\n", "root"),
+            Some(false)
+        );
         assert_eq!(account_locked("nobody:x::::::\n", "root"), None);
     }
 
@@ -648,8 +818,14 @@ mod tests {
         let out = "/dev/sda1:Windows 10:Windows:chain\n/dev/sda5:Ubuntu 24.04:Ubuntu:linux\n";
         let found = parse_os_prober(out);
         assert_eq!(found.len(), 2);
-        assert_eq!(found[0], ("/dev/sda1".to_string(), "Windows 10".to_string()));
-        assert_eq!(found[1], ("/dev/sda5".to_string(), "Ubuntu 24.04".to_string()));
+        assert_eq!(
+            found[0],
+            ("/dev/sda1".to_string(), "Windows 10".to_string())
+        );
+        assert_eq!(
+            found[1],
+            ("/dev/sda5".to_string(), "Ubuntu 24.04".to_string())
+        );
         assert!(parse_os_prober("").is_empty());
         assert!(parse_os_prober("\n  \n").is_empty());
         // missing label still yields a device entry
@@ -664,5 +840,16 @@ mod tests {
         assert!(esps.contains(&"/boot".to_string()));
         assert_eq!(esps.len(), 2);
         assert!(find_esp_mounts("dev / ext4 rw 0 0\n").is_empty());
+    }
+
+    #[test]
+    fn project_names_block_escape_allow_subdirs() {
+        assert!(safe_project_name("demo"));
+        assert!(safe_project_name("foo/bar"));
+        assert!(!safe_project_name(""));
+        assert!(!safe_project_name("/etc/evil"));
+        assert!(!safe_project_name("../escape"));
+        assert!(!safe_project_name("a/../../escape"));
+        assert!(!safe_project_name(".."));
     }
 }

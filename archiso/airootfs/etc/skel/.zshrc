@@ -4,7 +4,9 @@
 HISTFILE=~/.zsh_history
 HISTSIZE=5000
 SAVEHIST=5000
-setopt appendhistory autocd correct
+setopt appendhistory autocd
+# NOTE: zsh `correct` (autocorrect prompts) is OFF on purpose — it interrupts
+# newcomers on every typo. You get autosuggestions + syntax highlighting instead.
 autoload -Uz compinit promptinit && compinit && promptinit
 prompt adam1
 

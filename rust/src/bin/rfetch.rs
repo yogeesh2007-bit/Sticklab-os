@@ -47,9 +47,11 @@ fn os_pretty() -> String {
     fs::read_to_string("/etc/os-release")
         .ok()
         .and_then(|c| {
-            c.lines()
-                .find(|l| l.starts_with("PRETTY_NAME="))
-                .map(|l| l.trim_start_matches("PRETTY_NAME=").trim_matches('"').to_string())
+            c.lines().find(|l| l.starts_with("PRETTY_NAME=")).map(|l| {
+                l.trim_start_matches("PRETTY_NAME=")
+                    .trim_matches('"')
+                    .to_string()
+            })
         })
         .unwrap_or_else(|| "StickLab OS".into())
 }
@@ -79,7 +81,12 @@ fn cpu_model() -> String {
 }
 
 fn uptime() -> String {
-    read_first("/proc/uptime").split_whitespace().next().unwrap_or("?").to_string() + "s"
+    read_first("/proc/uptime")
+        .split_whitespace()
+        .next()
+        .unwrap_or("?")
+        .to_string()
+        + "s"
 }
 
 fn shell_name() -> String {
@@ -99,7 +106,14 @@ fn info_rows() -> Vec<(String, String)> {
     vec![
         ("user".into(), format!("{user}@{host}")),
         ("os".into(), os_pretty()),
-        ("kernel".into(), read_first("/proc/version").split_whitespace().nth(2).unwrap_or("?").to_string()),
+        (
+            "kernel".into(),
+            read_first("/proc/version")
+                .split_whitespace()
+                .nth(2)
+                .unwrap_or("?")
+                .to_string(),
+        ),
         ("cpu".into(), cpu_model()),
         ("mem".into(), mem_info()),
         ("uptime".into(), uptime()),
@@ -129,7 +143,10 @@ fn render(coloured: bool, rows: &[(String, String)]) -> String {
 }
 
 fn main() {
-    let coloured = use_color(std::env::var_os("NO_COLOR").is_some(), std::io::stdout().is_terminal());
+    let coloured = use_color(
+        std::env::var_os("NO_COLOR").is_some(),
+        std::io::stdout().is_terminal(),
+    );
     println!("{}", render(coloured, &info_rows()));
 }
 
