@@ -59,6 +59,15 @@ in nspawn (ufw only), `rsetup wm` shows all 3 WMs installed, `sticklab dualboot`
 reports all 5 tools ready. Serial console was `console=ttyS0` direct-kernel boot;
 normal BIOS/UEFI menu boot uses the same kernel + initramfs.
 
+**Final 2026-09-14 build (audit fixes in, `./build.sh` again, QEMU/KVM serial boot):**
+✅ **1,883,799,328 bytes (1.755 GiB)** — within budget. `rustc`/`cargo` on the ISO
+are rustup proxy symlinks → print rustup's fetch hint until the toolchain lands
+(docs say so). Lean archiso HOOKS kept initramfs at ~60MB. Boot: sr0 → bootmnt +
+loop → airootfs, Multi-User reached, `sticklab-os login:`, zero wizard/emergency/
+panic strings. Build lessons: `build.sh` work dir moved from `/tmp` (tmpfs,
+ENOSPC at 85% squash on 8GB tmpfs) to `out/.archiso-tmp` (override:
+`ARCHISO_TMPDIR`).
+
 ## 4. Size budget
 
 `scripts/mk-usb-img.sh` warns the build over **2,147,483,648 bytes**. Current release:

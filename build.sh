@@ -16,10 +16,14 @@ if ! command -v mkarchiso >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "[3/4] building ISO (needs sudo, downloads ~700MB, takes 5-20 min)..."
-sudo rm -rf /tmp/archiso-tmp out
+echo "[3/4] building ISO (needs sudo, downloads ~700MB, takes ~30-45 min on 4 cores)..."
+# NOTE: work dir lives under out/ (real disk), NOT /tmp — /tmp is often tmpfs and
+# too small (airootfs work + squash image need ~7GB; seen ENOSPC on 8GB tmpfs).
+# Override with ARCHISO_TMPDIR if you prefer elsewhere.
+WORKDIR="${ARCHISO_TMPDIR:-$ROOT/out/.archiso-tmp}"
+sudo rm -rf "$WORKDIR" out
 mkdir -p out
-sudo mkarchiso -v -w /tmp/archiso-tmp -o out archiso/
+sudo mkarchiso -v -w "$WORKDIR" -o out archiso/
 ISO=$(ls -t out/*.iso | head -n1)
 sudo chown "$(id -u):$(id -g)" "$ISO"
 echo "built: $ISO"
