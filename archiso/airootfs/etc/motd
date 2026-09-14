@@ -1,7 +1,7 @@
 
 Welcome to StickLab OS — created by YOGEESHWARAN C.
   rfetch        system fetch with the STICKLAB logo
-  sticklab      control center: gpu · langs · new · doctor · power · learn
+  sticklab      control center: gpu · langs · boards · new · doctor · power · learn
   Bolt+Return   terminal   ·  Bolt+D  launcher  ·  right-click  menu
   (Bolt = Alt key. Super stays with your host OS.)
   Make it yours: `rsetup customize` maps every themeable file.

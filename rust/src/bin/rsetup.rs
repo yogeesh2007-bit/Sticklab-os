@@ -76,6 +76,11 @@ fn coding() {
     println!("  rustup {}", tool_version("rustup", &["--version"]));
     println!("  nvim   {}", tool_version("nvim", &["--version"]));
     println!("  git    {}", tool_version("git", &["--version"]));
+    println!("StickLab OS hardware bench:");
+    println!("  tio     {}", tool_version("tio", &["--version"]));
+    println!("  openocd {}", tool_version("openocd", &["--version"]));
+    println!("  avrdude {}", tool_version("avrdude", &["--version"]));
+    println!("plug a board in and run `sticklab boards` to detect it");
     println!("first Rust toolchain: rustup toolchain install stable");
 }
 

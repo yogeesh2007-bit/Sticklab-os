@@ -85,6 +85,17 @@ just
 cmake
 ninja
 
+# --- hardware bench: MCU / embedded coders (Arduino, ESP32, STM32, Pico, AVR) ---
+# Offline on the ISO: serial console, flashing, debug, I2C, logic capture.
+# Heavy compilers (ARM/AVR GCC, Arduino-CLI, esptool) stay one command away:
+# `sticklab setup-hardware` (2GB budget). Detect boards with `sticklab boards`.
+tio
+openocd
+avrdude
+dfu-util
+i2c-tools
+sigrok-cli
+
 # --- hardware + networking (run on every PC) ---
 networkmanager
 iwd

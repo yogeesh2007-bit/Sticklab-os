@@ -12,6 +12,7 @@ Every line of Rust is unit-tested (`cargo test`, 12 tests). Every ISO is content
 | `account_locked_detects_star_bang` | `*`, `!`, `!hash` count as locked; real hashes don't; missing user = `None` |
 | `color_only_on_tty_without_no_color` | ANSI only on TTYs, `NO_COLOR` respected |
 | `logo_has_seven_rows_and_sticklab_shape` | logo intact (7 rows, block letters) |
+| `identify_board_known_chips_and_unknown` | USB VID:PID → board names (case-insensitive, whitespace-tolerant); unknowns = `None` |
 | `render_contains_logo_and_rows` / `render_coloured_has_escapes` | plain mode has zero escapes; color mode has them |
 
 ## 2. ISO content audit (unsquashfs, read-only loop mount)

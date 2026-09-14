@@ -3,11 +3,13 @@
 //!   sticklab            dashboard (system + GPU + languages at a glance)
 //!   sticklab gpu        GPU report: NVIDIA (CUDA-ready?) / AMD / Intel, drivers loaded
 //!   sticklab langs      every pre-installed language toolchain with versions
+//!   sticklab boards     USB hardware bench: detect MCU boards, serial ports, flash tools
 //!   sticklab new <tpl> <name>   scaffold a project (rust|python|go|node|c|java)
 //!   sticklab doctor     health + security check with fix hints (offline-friendly)
 //!   sticklab power      CPU/power report: governor, battery, TLP (longer charge)
 //!   sticklab learn      guided Linux-learning path using tools on this ISO
 //!   sticklab setup-gpu  one-command full CUDA toolkit / JDK install (needs internet)
+//!   sticklab setup-hardware  one-command MCU toolchains: ARM, AVR, ESP, Pico (needs internet)
 
 use std::env;
 use std::fs;
@@ -273,6 +275,140 @@ fn setup_gpu() {
     println!("  Verify after      : nvidia-smi ; nvcc --version ; sticklab gpu");
 }
 
+/// Identify a USB MCU/board from hex VID:PID (case-insensitive). Pure — unit tested.
+/// Returns (board name, suggested tool). Unknown chips return None.
+fn identify_board(vid: &str, pid: &str) -> Option<(&'static str, &'static str)> {
+    match (
+        vid.trim().to_lowercase().as_str(),
+        pid.trim().to_lowercase().as_str(),
+    ) {
+        ("2341", "0043") | ("2a03", "0043") => {
+            Some(("Arduino Uno R3", "arduino-cli / avrdude"))
+        }
+        ("0403", "6001") => Some((
+            "FTDI serial (Arduino Nano / FTDI cable)",
+            "tio /dev/ttyUSB0 + arduino-cli",
+        )),
+        ("1a86", "7523") => Some((
+            "CH340 serial (clone Nano / NodeMCU / ESP8266)",
+            "tio + esptool (sticklab setup-hardware)",
+        )),
+        ("1a86", "55d4") => Some((
+            "CH9102 serial (newer ESP32 boards)",
+            "tio + esptool (sticklab setup-hardware)",
+        )),
+        ("10c4", "ea60") => Some((
+            "CP2102 serial (ESP32 devkit / many boards)",
+            "tio + esptool (sticklab setup-hardware)",
+        )),
+        ("067b", "2303") => Some(("PL2303 serial cable", "tio /dev/ttyUSB0")),
+        ("303a", "1001") => Some((
+            "Espressif native USB (ESP32-S2/S3)",
+            "esptool (sticklab setup-hardware)",
+        )),
+        ("0483", "df11") => Some(("STM32 DFU bootloader", "dfu-util -l")),
+        ("0483", "374b") | ("0483", "3748") => Some((
+            "ST-Link debugger (STM32)",
+            "openocd -f interface/stlink.cfg",
+        )),
+        ("2e8a", "0003") => Some(("RP2040 USB-boot (Pico)", "drag-drop .uf2 or picotool")),
+        ("2e8a", "0005") => Some((
+            "RP2040 USB serial (Pico SDK / MicroPython)",
+            "tio /dev/ttyACM0",
+        )),
+        ("239a", _) => Some(("Adafruit UF2 bootloader (SAMD/nRF/RP2040)", "drag-drop .uf2")),
+        ("16c0", "0478") | ("16c0", "0483") => {
+            Some(("Teensy (HalfKay / Serial)", "teensy_loader_cli + tio"))
+        }
+        ("0d28", "0204") => Some(("BBC micro:bit", "drag-drop .hex + tio /dev/ttyACM0")),
+        _ => None,
+    }
+}
+
+fn boards() {
+    println!("StickLab OS hardware bench (plug a board in, run again):");
+    let mut found = false;
+    if let Ok(rd) = fs::read_dir("/sys/bus/usb/devices") {
+        let mut devs: Vec<_> = rd.flatten().collect();
+        devs.sort_by_key(|e| e.file_name());
+        for e in devs {
+            let base = e.path();
+            let vid = fs::read_to_string(base.join("idVendor"))
+                .unwrap_or_default()
+                .trim()
+                .to_lowercase();
+            let pid = fs::read_to_string(base.join("idProduct"))
+                .unwrap_or_default()
+                .trim()
+                .to_lowercase();
+            if vid.is_empty() || pid.is_empty() {
+                continue;
+            }
+            found = true;
+            let prod = fs::read_to_string(base.join("product"))
+                .unwrap_or_default();
+            let name = if prod.trim().is_empty() {
+                format!("{vid}:{pid}")
+            } else {
+                format!("{} [{vid}:{pid}]", prod.trim())
+            };
+            match identify_board(&vid, &pid) {
+                Some((board, tool)) => println!("  {name}\n    → {board} — {tool}"),
+                None => println!(
+                    "  {name}\n    → unknown chip — `lsusb -v`, then `tio` if it makes a /dev/ttyUSB* node"
+                ),
+            }
+        }
+    }
+    if !found {
+        println!("  no USB devices visible (VM without USB passthrough? needs bare metal)");
+    }
+    let mut ports: Vec<String> = vec![];
+    if let Ok(rd) = fs::read_dir("/dev") {
+        for e in rd.flatten() {
+            let n = e.file_name().to_string_lossy().into_owned();
+            if n.starts_with("ttyUSB") || n.starts_with("ttyACM") {
+                ports.push(format!("/dev/{n}"));
+            }
+        }
+        ports.sort();
+    }
+    if ports.is_empty() {
+        println!("  serial ports: none (/dev/ttyUSB* /dev/ttyACM*)");
+    } else {
+        for p in &ports {
+            println!("  serial port: {p} — console: tio {p}");
+        }
+    }
+    for (label, bin) in [
+        ("serial console", "tio"),
+        ("AVR flash", "avrdude"),
+        ("ARM debug", "openocd"),
+        ("DFU flash", "dfu-util"),
+        ("I2C probe", "i2cdetect"),
+        ("logic capture", "sigrok-cli"),
+        ("Arduino manager", "arduino-cli"),
+    ] {
+        if have(&format!("/usr/bin/{bin}")) {
+            println!("  {label}: {bin} ready");
+        } else {
+            println!("  {label}: {bin} missing → sticklab setup-hardware");
+        }
+    }
+}
+
+fn setup_hardware() {
+    println!("StickLab OS hardware-bench extras (needs internet):");
+    println!("  On the ISO already : tio openocd avrdude dfu-util i2c-tools sigrok-cli");
+    println!("  ARM Cortex-M       : sudo pacman -S arm-none-eabi-gcc arm-none-eabi-gdb arm-none-eabi-newlib");
+    println!("  AVR (Uno/Nano)     : sudo pacman -S avr-gcc avr-libc arduino-cli  (avrdude already on board)");
+    println!("  ESP32 / ESP8266    : pip install esptool adafruit-ampy  (then: esptool.py --port /dev/ttyUSB0 flash_id)");
+    println!("  Raspberry Pi Pico  : yay -S picotool  (AUR) — or drag-drop .uf2 in BOOTSEL mode, no tool needed");
+    println!("  Rust on MCU        : rustup target add thumbv7em-none-eabihf thumbv6m-none-eabi riscv32imc-unknown-none-elf");
+    println!("  Serial permissions : live session runs as root; installed systems need `sudo usermod -aG uucp $USER` + relogin");
+    println!("  Detect after       : plug the board in, run `sticklab boards`");
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
@@ -282,14 +418,16 @@ fn main() {
     match args[1].as_str() {
         "gpu" => gpu(),
         "langs" => langs(),
+        "boards" => boards(),
         "new" => new_project(),
         "doctor" => doctor(),
         "power" => power(),
         "learn" => learn(),
         "setup-gpu" => setup_gpu(),
+        "setup-hardware" => setup_hardware(),
         "help" | "--help" | "-h" => {
             println!("sticklab — StickLab OS control center");
-            println!("  sticklab [dashboard] | gpu | langs | new <tpl> <name> | doctor | power | learn | setup-gpu");
+            println!("  sticklab [dashboard] | gpu | langs | boards | new <tpl> <name> | doctor | power | learn | setup-gpu | setup-hardware");
         }
         _ => {
             eprintln!("unknown command '{}'. Try: sticklab help", args[1]);
@@ -337,5 +475,32 @@ mod tests {
         assert_eq!(account_locked("root:!:14871::::::\n", "root"), Some(true));
         assert_eq!(account_locked("root:$6$salt$hash:14871::::::\n", "root"), Some(false));
         assert_eq!(account_locked("nobody:x::::::\n", "root"), None);
+    }
+
+    #[test]
+    fn identify_board_known_chips_and_unknown() {
+        assert_eq!(
+            identify_board("2341", "0043").map(|b| b.0),
+            Some("Arduino Uno R3")
+        );
+        // case-insensitive hex
+        assert_eq!(
+            identify_board("1A86", "7523").map(|b| b.0),
+            Some("CH340 serial (clone Nano / NodeMCU / ESP8266)")
+        );
+        assert_eq!(
+            identify_board("0483", "df11").map(|b| b.0),
+            Some("STM32 DFU bootloader")
+        );
+        assert_eq!(
+            identify_board("2e8a", "0003").map(|b| b.0),
+            Some("RP2040 USB-boot (Pico)")
+        );
+        assert_eq!(
+            identify_board(" 10c4 ", " ea60 ").map(|b| b.0),
+            Some("CP2102 serial (ESP32 devkit / many boards)")
+        );
+        assert!(identify_board("1234", "5678").is_none());
+        assert!(identify_board("", "").is_none());
     }
 }

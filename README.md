@@ -21,6 +21,14 @@
 
 ---
 
+## 💡 Why StickLab OS exists
+
+Most newcomers meet Linux in the worst way possible: as a bare installer that hands them a black screen and a wiki link, or as a 5GB download that still can't compile "hello world" offline. Students learn *about* Linux without ever getting a lab. Hardware tinkerers — the Arduino / ESP32 / STM32 / Pico crowd — have it worse: plug a board into a fresh Linux box and you get silence. No serial console, no flasher, no debugger, and a permissions maze before the first blink sketch.
+
+StickLab OS was created to fix exactly that: **a complete laboratory on a 2GB USB stick that boots on any PC, works fully offline, welcomes first-time Linux users instead of hazing them, and treats hardware coders as first-class citizens** — serial, flashing, and debug tools on board, with `sticklab boards` naming whatever you plug in.
+
+If you need it, it should already be there. If it teaches you, even better.
+
 ## ✨ Why StickLab OS?
 
 Most tiny distros make you choose: **small** *or* **ready**. StickLab OS refuses:
@@ -30,6 +38,7 @@ Most tiny distros make you choose: **small** *or* **ready**. StickLab OS refuses
 | Runs on **every PC** | Linux kernel + full firmware set, Intel/AMD microcode, BIOS **and** UEFI boot, Intel/AMD/NVIDIA GPUs |
 | **CUDA-ready** | NVIDIA open modules + userspace on board (`nvidia-smi` works); full toolkit one command away |
 | All **languages pre-installed** | C/C++, Python, Go, Node, **Rust**, Java, Ruby, PHP, Lua, Perl — offline, verified by `sticklab langs` |
+| **Hardware bench included** | Serial console, AVR/ARM flashing, DFU, I2C, logic capture on board; `sticklab boards` detects Uno, Nano, ESP32, STM32, Pico, Teensy, micro:bit — heavy compilers one command away |
 | Modern **coder dependencies** | git, cmake, ninja, curl, gh, just, man pages, tldr, btop, fzf, ripgrep… |
 | **Cool + customizable**, not opinionated | Labwc stacking desktop (Openbox-style), Waybar, Wofi, Foot — every config plain text in `~/.config` |
 | Learn **Linux properly** | `sticklab learn` guided path: man → tldr → syscalls → `/proc` → networking, all tools on board |
@@ -85,15 +94,34 @@ The one thing other OSes lack: a single fast offline command for the whole syste
 sticklab              # dashboard: OS, kernel, GPU, CUDA status, languages
 sticklab gpu          # GPU report — NVIDIA/AMD/Intel, loaded drivers, Vulkan ICDs
 sticklab langs        # every language toolchain with versions
+sticklab boards       # USB hardware bench: detect MCU boards + serial ports + flash tools
 sticklab new rust demo      # scaffold rust|python|go|node|c|java project
 sticklab doctor       # health + SECURITY audit with fix hints
 sticklab power        # CPU governor, battery, TLP — stretch that charge
 sticklab learn        # guided Linux learning path
 sticklab setup-gpu    # one-command full CUDA toolkit / JDK install (online)
+sticklab setup-hardware  # one-command MCU toolchains: ARM, AVR, ESP, Pico (online)
 sticklab help
 ```
 
 Plus three companions in `/usr/local/bin`: `rinit` (boot helper), `rfetch` (the logo above ⚡), `rsetup` (first-boot: hostname, services).
+
+---
+
+## 🔌 Hardware coders (Arduino · ESP32 · STM32 · Pico · AVR)
+
+Software isn't the whole story — most new coders touch hardware first. StickLab OS ships an offline workbench for them:
+
+| Step | How |
+|---|---|
+| **Plug the board in** | USB-serial chips (CH340, CP2102, CH9102, FTDI, PL2303), ST-Link, DFU bootloaders — kernel drivers + firmware on board |
+| **Detect it** | `sticklab boards` names the board (Uno, Nano, ESP32, STM32, Pico, Teensy, micro:bit…), shows its `/dev/ttyUSB*` port and the exact tool to use |
+| **Talk to it** | `tio /dev/ttyUSB0` serial console; `i2cdetect -l` for I2C buses; `sigrok-cli` for logic capture |
+| **Flash it** | `avrdude` (AVR), `openocd` (ARM/STM32/RP2040 debug), `dfu-util` (STM32 DFU) — preinstalled, offline |
+| **Go further (online)** | `sticklab setup-hardware` — ARM + AVR GCC toolchains, Arduino-CLI, esptool via pip, picotool (AUR), Rust MCU targets |
+| **No permission maze** | Live session runs as root, so serial just works. Installed systems: `sudo usermod -aG uucp $USER` + relogin |
+
+Heavy compilers stay a download away on purpose — the 2GB stick budget goes to the tools you need *before* you have internet.
 
 ---
 
@@ -109,6 +137,7 @@ No distro wins at everything. Here's the honest version.
 | **Ubuntu / Fedora** (~5GB ISOs, install-first) | Whole lab fits on a **2GB USB stick**, boots live on any BIOS/UEFI PC with nothing to install. One `sticklab` command replaces a dozen disconnected tools. |
 | Dev distros (**SemiCode OS**, **GenesiOS**) | Smaller (~1.7GB vs 3–10GB), terminal-first instead of a heavy GNOME/KDE desktop, and every config is plain text you can read — it's also a *teaching* OS (`sticklab learn`), not just a tool dump. |
 | Portable USB sellers / **Tails** | Tails buys amnesia at the cost of a usable dev environment. StickLab OS is the opposite trade: a full offline coder's lab (compilers, CUDA userspace, man pages, `strace`) on the same live-USB idea. |
+| Stock Debian / Pi OS for **hardware tinkering** | No serial console, flasher, or debugger out of the box — and no idea what you just plugged in. StickLab OS ships `tio`, `avrdude`, `openocd`, `dfu-util` plus `sticklab boards` board detection. |
 
 ### Where the others win (real weaknesses, no spin)
 
