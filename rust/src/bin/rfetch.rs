@@ -1,5 +1,5 @@
-//! rfetch — Night OS fastfetch in Rust (std only).
-//! Big block-letter NIGHT logo, neofetch-style info block, ANSI colors on TTYs.
+//! rfetch — StickLab OS fastfetch in Rust (std only).
+//! Big block-letter STICKLAB logo, neofetch-style info block, ANSI colors on TTYs.
 
 use std::fs;
 use std::io::IsTerminal;
@@ -17,13 +17,13 @@ fn use_color(no_color_set: bool, is_tty: bool) -> bool {
 fn logo_lines(coloured: bool) -> Vec<String> {
     // Box-drawing block letters: deterministic alignment in every monospace font.
     let raw = [
-        r" ███╗   ██╗██╗ ██████╗ ██╗  ██╗████████╗",
-        r" ████╗  ██║██║██╔════╝ ██║  ██║╚══██╔══╝",
-        r" ██╔██╗ ██║██║██║  ███╗███████║   ██║   ",
-        r" ██║╚██╗██║██║██║   ██║██╔══██║   ██║   ",
-        r" ██║ ╚████║██║╚██████╔╝██║  ██║   ██║   ",
-        r" ╚═╝  ╚═══╝╚═╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ",
-        r"   ☾ · night os · by YOGEESHWARAN C · ★  ",
+        r" ███████╗ ████████╗ ██╗  ██████╗ ██╗  ██╗ ██╗       █████╗  ██████╗  ",
+        r" ██╔════╝ ╚══██╔══╝ ██║ ██╔════╝ ██║ ██╔╝ ██║      ██╔══██╗ ██╔══██╗ ",
+        r" ███████╗    ██║    ██║ ██║      █████╔╝  ██║      ███████║ ██████╔╝ ",
+        r" ╚════██║    ██║    ██║ ██║      ██╔═██╗  ██║      ██╔══██║ ██╔══██╗ ",
+        r" ███████║    ██║    ██║ ╚██████╗ ██║  ██╗ ███████╗ ██║  ██║ ██████╔╝ ",
+        r" ╚══════╝    ╚═╝    ╚═╝  ╚═════╝ ╚═╝  ╚═╝ ╚══════╝ ╚═╝  ╚═╝ ╚═════╝  ",
+        r"   ⚡ · sticklab os · by YOGEESHWARAN C · ★  ",
     ];
     raw.iter()
         .map(|l| {
@@ -51,7 +51,7 @@ fn os_pretty() -> String {
                 .find(|l| l.starts_with("PRETTY_NAME="))
                 .map(|l| l.trim_start_matches("PRETTY_NAME=").trim_matches('"').to_string())
         })
-        .unwrap_or_else(|| "Night OS".into())
+        .unwrap_or_else(|| "StickLab OS".into())
 }
 
 fn mem_info() -> String {
@@ -145,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    fn logo_has_seven_rows_and_night_shape() {
+    fn logo_has_seven_rows_and_sticklab_shape() {
         let plain = logo_lines(false);
         assert_eq!(plain.len(), 7);
         assert!(plain[0].contains("██╗"));
@@ -154,17 +154,17 @@ mod tests {
 
     #[test]
     fn render_contains_logo_and_rows() {
-        let rows = vec![("os".to_string(), "Night OS".to_string())];
+        let rows = vec![("os".to_string(), "StickLab OS".to_string())];
         let out = render(false, &rows);
         assert!(out.contains("██╗"));
-        assert!(out.contains("os · Night OS"));
+        assert!(out.contains("os · StickLab OS"));
         // no ANSI escapes in plain mode
         assert!(!out.contains('\x1b'));
     }
 
     #[test]
     fn render_coloured_has_escapes() {
-        let rows = vec![("os".to_string(), "Night OS".to_string())];
+        let rows = vec![("os".to_string(), "StickLab OS".to_string())];
         assert!(render(true, &rows).contains('\x1b'));
     }
 }

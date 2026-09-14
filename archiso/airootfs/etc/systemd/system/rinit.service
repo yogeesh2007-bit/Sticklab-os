@@ -1,5 +1,5 @@
 [Unit]
-Description=rinit — Night OS Rust init helper
+Description=rinit — StickLab OS Rust init helper
 After=network-pre.target
 Before=network.target
 

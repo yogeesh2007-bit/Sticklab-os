@@ -1,4 +1,4 @@
-# Night OS Wayland environment
+# StickLab OS Wayland environment
 XKB_DEFAULT_LAYOUT=us
 MOZ_ENABLE_WAYLAND=1
 QT_QPA_PLATFORM=wayland

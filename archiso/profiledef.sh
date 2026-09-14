@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# archiso profile for Night OS — Arch remaster, ~1GB, minimal GUI, USB-bootable.
+# archiso profile for StickLab OS — Arch remaster, ~1GB, minimal GUI, USB-bootable.
 # Rust core userspace (rinit, rfetch, rsetup). See: https://wiki.archlinux.org/title/Archiso
-iso_name="night-os"
-iso_label="NIGHTOS"
-iso_publisher="Night OS by YOGEESHWARAN C <https://github.com/yogeesh2007-bit/night-os>"
-iso_application="Night OS live/USB"
+iso_name="sticklab-os"
+iso_label="STICKLABOS"
+iso_publisher="StickLab OS by YOGEESHWARAN C <https://github.com/yogeesh2007-bit/sticklab-os>"
+iso_application="StickLab OS live/USB"
 iso_version="$(date +%Y.%m.%d)"
 install_dir="arch"
 bootmodes=('bios.syslinux' 'uefi.systemd-boot')
@@ -18,5 +18,5 @@ file_permissions=(
   ["/usr/local/bin/rinit"]="0:0:755"
   ["/usr/local/bin/rfetch"]="0:0:755"
   ["/usr/local/bin/rsetup"]="0:0:755"
-  ["/usr/local/bin/night"]="0:0:755"
+  ["/usr/local/bin/sticklab"]="0:0:755"
 )

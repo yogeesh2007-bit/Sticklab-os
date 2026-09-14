@@ -1,13 +1,13 @@
-//! night — the Night OS control center (std only).
+//! sticklab — the StickLab OS control center (std only).
 //! One command for everything people actually open an OS for:
-//!   night            dashboard (system + GPU + languages at a glance)
-//!   night gpu        GPU report: NVIDIA (CUDA-ready?) / AMD / Intel, drivers loaded
-//!   night langs      every pre-installed language toolchain with versions
-//!   night new <tpl> <name>   scaffold a project (rust|python|go|node|c|java)
-//!   night doctor     health + security check with fix hints (offline-friendly)
-//!   night power      CPU/power report: governor, battery, TLP (longer charge)
-//!   night learn      guided Linux-learning path using tools on this ISO
-//!   night setup-gpu  one-command full CUDA toolkit / JDK install (needs internet)
+//!   sticklab            dashboard (system + GPU + languages at a glance)
+//!   sticklab gpu        GPU report: NVIDIA (CUDA-ready?) / AMD / Intel, drivers loaded
+//!   sticklab langs      every pre-installed language toolchain with versions
+//!   sticklab new <tpl> <name>   scaffold a project (rust|python|go|node|c|java)
+//!   sticklab doctor     health + security check with fix hints (offline-friendly)
+//!   sticklab power      CPU/power report: governor, battery, TLP (longer charge)
+//!   sticklab learn      guided Linux-learning path using tools on this ISO
+//!   sticklab setup-gpu  one-command full CUDA toolkit / JDK install (needs internet)
 
 use std::env;
 use std::fs;
@@ -38,31 +38,31 @@ fn mem_total_kb(meminfo: &str) -> u64 {
         .unwrap_or(0)
 }
 
-/// File list (relative path, content) for `night new`. Pure — unit tested.
+/// File list (relative path, content) for `sticklab new`. Pure — unit tested.
 /// Returns None for unknown templates.
 fn scaffold(tpl: &str, name: &str) -> Option<Vec<(String, String)>> {
     match tpl {
         "rust" => Some(vec![
             ("Cargo.toml".into(), format!("[package]\nname = \"{name}\"\nversion = \"0.1.0\"\nedition = \"2021\"\n")),
-            ("src/main.rs".into(), "fn main() {\n    println!(\"night from Night OS\");\n}\n".into()),
+            ("src/main.rs".into(), "fn main() {\n    println!(\"hello from StickLab OS\");\n}\n".into()),
         ]),
         "python" => Some(vec![
-            ("main.py".into(), "def main():\n    print(\"night from Night OS\")\n\nif __name__ == \"__main__\":\n    main()\n".into()),
+            ("main.py".into(), "def main():\n    print(\"hello from StickLab OS\")\n\nif __name__ == \"__main__\":\n    main()\n".into()),
         ]),
         "go" => Some(vec![
             ("go.mod".into(), format!("module {name}\n\ngo 1.23\n")),
-            ("main.go".into(), "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"night from Night OS\")\n}\n".into()),
+            ("main.go".into(), "package main\n\nimport \"fmt\"\n\nfunc main() {\n\tfmt.Println(\"hello from StickLab OS\")\n}\n".into()),
         ]),
         "node" => Some(vec![
             ("package.json".into(), format!("{{\n  \"name\": \"{name}\",\n  \"version\": \"1.0.0\",\n  \"main\": \"index.js\"\n}}\n")),
-            ("index.js".into(), "console.log(\"night from Night OS\");\n".into()),
+            ("index.js".into(), "console.log(\"hello from StickLab OS\");\n".into()),
         ]),
         "c" => Some(vec![
-            ("main.c".into(), "#include <stdio.h>\n\nint main(void) {\n    printf(\"night from Night OS\\n\");\n    return 0;\n}\n".into()),
+            ("main.c".into(), "#include <stdio.h>\n\nint main(void) {\n    printf(\"hello from StickLab OS\\n\");\n    return 0;\n}\n".into()),
             ("Makefile".into(), "all:\n\tgcc -Wall -Wextra -o app main.c\n".into()),
         ]),
         "java" => Some(vec![
-            ("Main.java".into(), "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"night from Night OS\");\n    }\n".into()),
+            ("Main.java".into(), "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"hello from StickLab OS\");\n    }\n".into()),
         ]),
         _ => None,
     }
@@ -89,7 +89,7 @@ fn dashboard() {
                 .find(|l| l.starts_with("PRETTY_NAME="))
                 .map(|l| l.trim_start_matches("PRETTY_NAME=").trim_matches('"').to_string())
         })
-        .unwrap_or_else(|| "Night OS".into());
+        .unwrap_or_else(|| "StickLab OS".into());
     let kernel = run("uname", &["-r"]).unwrap_or_else(|| "?".into());
     let gpu_line = Command::new("sh")
         .args(["-c", "lspci 2>/dev/null | grep -iE 'vga|3d|display' | head -3"])
@@ -105,15 +105,15 @@ fn dashboard() {
     } else {
         "no NVIDIA userspace (AMD/Intel/Nouveau path)".into()
     };
-    println!("  NIGHT  {os}   kernel {kernel}");
+    println!("  STICKLAB  {os}   kernel {kernel}");
     println!("  GPU  : {gpu}");
     println!("  CUDA : {cuda}");
     println!("  langs: C/C++ gcc · python · go · node · rust · java · ruby · php · lua · perl");
-    println!("  next : `night langs` toolchains · `night new rust demo` scaffold · `night doctor` health");
+    println!("  next : `sticklab langs` toolchains · `sticklab new rust demo` scaffold · `sticklab doctor` health");
 }
 
 fn gpu() {
-    println!("Night OS GPU report (x86_64 PCs: NVIDIA / AMD / Intel):");
+    println!("StickLab OS GPU report (x86_64 PCs: NVIDIA / AMD / Intel):");
     let lspci = Command::new("sh")
         .args(["-c", "lspci -nnk 2>/dev/null | grep -iA3 -E 'vga|3d|display' || echo 'lspci: no GPU lines'"])
         .output()
@@ -130,7 +130,7 @@ fn gpu() {
         println!("--- nvidia-smi ---");
         let _ = Command::new("nvidia-smi").status();
     } else {
-        println!("  nvidia-smi: absent → NVIDIA dGPU? run `night setup-gpu` (needs internet).");
+        println!("  nvidia-smi: absent → NVIDIA dGPU? run `sticklab setup-gpu` (needs internet).");
     }
     let icds: Vec<_> = ["intel", "radeon", "nouveau", "nvidia"]
         .iter()
@@ -155,19 +155,19 @@ fn langs() {
         ("perl  ", "perl", &["--version"]),
         ("sqlite", "sqlite3", &["--version"]),
     ];
-    println!("Night OS language environments (pre-installed, offline-ready):");
+    println!("StickLab OS language environments (pre-installed, offline-ready):");
     for (name, tool, args) in table {
         let v = run(tool, args).unwrap_or_else(|| "—".into());
         let first = v.lines().next().unwrap_or("—");
         println!("  {name} {first:.70}");
     }
-    println!("full JDK / CUDA toolkit (online): `night setup-gpu`");
+    println!("full JDK / CUDA toolkit (online): `sticklab setup-gpu`");
 }
 
 fn new_project() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 4 {
-        eprintln!("usage: night new <rust|python|go|node|c|java> <name>");
+        eprintln!("usage: sticklab new <rust|python|go|node|c|java> <name>");
         std::process::exit(2);
     }
     let (tpl, name) = (args[2].as_str(), args[3].as_str());
@@ -191,7 +191,7 @@ fn new_project() {
 }
 
 fn doctor() {
-    println!("Night OS doctor (health + security):");
+    println!("StickLab OS doctor (health + security):");
     let mut ok = true;
     let check = |label: &str, good: bool, hint: &str, ok: &mut bool| {
         println!("  [{}] {label}{}", if good { "OK" } else { "!!" }, if good { String::new() } else { format!(" → {hint}") });
@@ -206,7 +206,7 @@ fn doctor() {
     check("disk space >= 512MB free", avail >= 512, "clean pacman cache: sudo pacman -Scc", &mut ok);
     check("labwc desktop installed", have("/usr/bin/labwc"), "reinstall profile or use foot on tty", &mut ok);
     check("NetworkManager present", have("/usr/bin/NetworkManager") || have("/usr/bin/nmtui"), "use `nmtui` / check cable", &mut ok);
-    check("GPU userspace (nvidia-utils or mesa)", have("/usr/lib/libcuda.so.1") || have("/usr/lib/dri/radeonsi_dri.so") || have("/usr/lib/libGLX_mesa.so.0"), "run `night gpu`", &mut ok);
+    check("GPU userspace (nvidia-utils or mesa)", have("/usr/lib/libcuda.so.1") || have("/usr/lib/dri/radeonsi_dri.so") || have("/usr/lib/libGLX_mesa.so.0"), "run `sticklab gpu`", &mut ok);
     // --- security surface ---
     let sshd_on = Command::new("systemctl").args(["is-enabled", "sshd"]).output().map(|o| String::from_utf8_lossy(&o.stdout).trim() == "enabled").unwrap_or(false);
     check("sshd disabled by default (no remote entry)", !sshd_on, "sudo systemctl disable --now sshd", &mut ok);
@@ -216,11 +216,11 @@ fn doctor() {
         Ok(sh) => check("root password locked (live-safe)", account_locked(&sh, "root").unwrap_or(false), "sudo passwd -l root", &mut ok),
         Err(_) => println!("  [--] root password lock: unreadable (run doctor as root for this check)"),
     }
-    println!("{}", if ok { "all green. happy hacking." } else { "issues above — hints included. `night learn` teaches the why." });
+    println!("{}", if ok { "all green. happy hacking." } else { "issues above — hints included. `sticklab learn` teaches the why." });
 }
 
 fn power() {
-    println!("Night OS power report (sip, don't gulp):");
+    println!("StickLab OS power report (sip, don't gulp):");
     let cpu = fs::read_to_string("/proc/cpuinfo")
         .unwrap_or_default()
         .lines()
@@ -252,24 +252,24 @@ fn power() {
 }
 
 fn learn() {
-    println!("Night OS learn-path (everything below is pre-installed):");
+    println!("StickLab OS learn-path (everything below is pre-installed):");
     println!("  1. `man man` + `man ls` — the manual is the textbook (man-db + man-pages)");
     println!("  2. `tldr tar` — community cheat-sheets when man is too long");
-    println!("  3. `rsetup coding` + `night langs` — see your toolchains");
-    println!("  4. `night new python demo && cd demo && python main.py` — first program");
+    println!("  3. `rsetup coding` + `sticklab langs` — see your toolchains");
+    println!("  4. `sticklab new python demo && cd demo && python main.py` — first program");
     println!("  5. `strace -c ls` — watch syscalls: this is how Linux really works");
     println!("  6. `btop` + `ls /proc` — processes, then the virtual filesystem");
     println!("  7. `nmtui` + `ip addr` — networking hands-on");
-    println!("  8. `night power` + `cpupower frequency-info` — how your CPU sips power");
+    println!("  8. `sticklab power` + `cpupower frequency-info` — how your CPU sips power");
     println!("  9. edit ~/.config/labwc/rc.xml — your WM, your rules");
 }
 
 fn setup_gpu() {
-    println!("Night OS one-command extras (needs internet):");
+    println!("StickLab OS one-command extras (needs internet):");
     println!("  Full CUDA toolkit : sudo pacman -S cuda cudnn");
     println!("  Full JDK (javac)  : sudo pacman -S jdk-openjdk  (JRE already on board)");
     println!("  32-bit gaming libs: sudo pacman -S lib32-nvidia-utils lib32-mesa");
-    println!("  Verify after      : nvidia-smi ; nvcc --version ; night gpu");
+    println!("  Verify after      : nvidia-smi ; nvcc --version ; sticklab gpu");
 }
 
 fn main() {
@@ -287,11 +287,11 @@ fn main() {
         "learn" => learn(),
         "setup-gpu" => setup_gpu(),
         "help" | "--help" | "-h" => {
-            println!("night — Night OS control center");
-            println!("  night [dashboard] | gpu | langs | new <tpl> <name> | doctor | power | learn | setup-gpu");
+            println!("sticklab — StickLab OS control center");
+            println!("  sticklab [dashboard] | gpu | langs | new <tpl> <name> | doctor | power | learn | setup-gpu");
         }
         _ => {
-            eprintln!("unknown command '{}'. Try: night help", args[1]);
+            eprintln!("unknown command '{}'. Try: sticklab help", args[1]);
             std::process::exit(2);
         }
     }

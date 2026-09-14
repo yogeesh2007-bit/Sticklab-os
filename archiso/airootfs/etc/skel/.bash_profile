@@ -1,4 +1,4 @@
-# ~/.bash_profile for Night OS live user — start Labwc desktop on tty1.
+# ~/.bash_profile for StickLab OS live user — start Labwc desktop on tty1.
 # Plain console on every other tty (learn-Linux friendly).
 if [ -z "$WAYLAND_DISPLAY" ] && [ "$(tty)" = "/dev/tty1" ]; then
   if command -v labwc >/dev/null 2>&1; then

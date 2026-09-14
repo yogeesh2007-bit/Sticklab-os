@@ -1,4 +1,4 @@
--- Night OS minimal neovim defaults — extend with your own plugins.
+-- StickLab OS minimal neovim defaults — extend with your own plugins.
 vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.expandtab = true

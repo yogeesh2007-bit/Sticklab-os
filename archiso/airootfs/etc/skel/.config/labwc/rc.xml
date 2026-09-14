@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<!-- Night OS Labwc config — stacking WM, Openbox-style. Change anything. -->
+<!-- StickLab OS Labwc config — stacking WM, Openbox-style. Change anything. -->
 <labwc_config>
   <core>
     <gap>8</gap>

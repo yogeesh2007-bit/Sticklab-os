@@ -1,4 +1,4 @@
-//! rsetup — first-boot helper for Night OS (std only).
+//! rsetup — first-boot helper for StickLab OS (std only).
 //! Usage: rsetup status | rsetup coding | sudo rsetup set-hostname NAME | sudo rsetup enable-gui
 
 use std::env;
@@ -6,7 +6,7 @@ use std::fs;
 use std::process::Command;
 
 fn help() {
-    println!("rsetup — Night OS first-boot helper");
+    println!("rsetup — StickLab OS first-boot helper");
     println!("  rsetup status              hostname, network, desktop readiness");
     println!("  rsetup coding              coding toolchain versions (gcc, python, go, node, rust, nvim)");
     println!("  sudo rsetup set-hostname NAME");
@@ -52,7 +52,7 @@ fn tool_version(tool: &str, args: &[&str]) -> String {
 }
 
 fn coding() {
-    println!("Night OS coding toolchains:");
+    println!("StickLab OS coding toolchains:");
     println!("  gcc    {}", tool_version("gcc", &["--version"]));
     println!("  make   {}", tool_version("make", &["--version"]));
     println!("  python {}", tool_version("python", &["--version"]));

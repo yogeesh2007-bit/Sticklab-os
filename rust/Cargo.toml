@@ -17,5 +17,5 @@ name = "rsetup"
 path = "src/bin/rsetup.rs"
 
 [[bin]]
-name = "night"
-path = "src/bin/night.rs"
+name = "sticklab"
+path = "src/bin/sticklab.rs"

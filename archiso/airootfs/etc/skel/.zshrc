@@ -1,4 +1,4 @@
-# Night OS default zshrc — pick bash or zsh, both work. Edit freely.
+# StickLab OS default zshrc — pick bash or zsh, both work. Edit freely.
 HISTFILE=~/.zsh_history
 HISTSIZE=5000
 SAVEHIST=5000

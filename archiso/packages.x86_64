@@ -1,7 +1,7 @@
-# Night OS package list — coding + learn-Linux + Labwc desktop + GPU, budgeted <2GB USB image.
+# StickLab OS package list — coding + learn-Linux + Labwc desktop + GPU, budgeted <2GB USB image.
 # GPU: NVIDIA (open modules + userspace = CUDA-ready) + AMD/Intel Vulkan + OpenCL loader.
 # Languages pre-installed: C/C++, Python, Go, Node, Rust, Java-runtime, Ruby, PHP, Lua, Perl.
-# Full JDK / CUDA toolkit install on demand via `night setup-gpu` / pacman (online).
+# Full JDK / CUDA toolkit install on demand via `sticklab setup-gpu` / pacman (online).
 
 # --- base system ---
 base

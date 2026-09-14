@@ -4,11 +4,11 @@
 # renamed for USB flashers (balenaEtcher, dd, Ventoy data partition).
 set -euo pipefail
 ISO="${1:?usage: mk-usb-img.sh <input.iso> [output.img]}"
-OUT="${2:-out/night-os-usb.img}"
+OUT="${2:-out/sticklab-os-usb.img}"
 mkdir -p "$(dirname "$OUT")"
 cp --reflink=auto "$ISO" "$OUT"
 ls -lh "$ISO" "$OUT"
-echo "--- size check (Night OS budget 2GB = 2147483648 bytes) ---"
+echo "--- size check (StickLab OS budget 2GB = 2147483648 bytes) ---"
 stat -c '%n %s bytes' "$OUT"
 SIZE=$(stat -c %s "$OUT")
 if [ "$SIZE" -gt 2147483648 ]; then
