@@ -1,15 +1,105 @@
 //! rsetup — first-boot helper for StickLab OS (std only).
-//! Usage: rsetup status | rsetup coding | rsetup customize | sudo rsetup set-hostname NAME | sudo rsetup enable-gui
+//! Usage: rsetup status | rsetup coding | rsetup customize | rsetup wm [labwc|sway|hyprland] | sudo rsetup set-hostname NAME | sudo rsetup enable-gui
 
 use std::env;
 use std::fs;
 use std::process::Command;
+
+/// Window managers shipped on the ISO, in default order.
+const WMS: &[&str] = &["labwc", "sway", "hyprland"];
+
+/// Normalize user input to a known WM id. Accepts `hypr` as shorthand. Pure — unit tested.
+fn normalize_wm(input: &str) -> Option<&'static str> {
+    match input.trim().to_lowercase().as_str() {
+        "labwc" => Some("labwc"),
+        "sway" => Some("sway"),
+        "hyprland" | "hypr" => Some("hyprland"),
+        _ => None,
+    }
+}
+
+/// Compositor binary for a WM id. Pure — unit tested.
+fn wm_binary(wm: &str) -> &'static str {
+    match wm {
+        "sway" => "sway",
+        "hyprland" => "Hyprland",
+        _ => "labwc",
+    }
+}
+
+/// Config file that controls the keys for a WM id. Pure — unit tested.
+fn wm_config(wm: &str) -> &'static str {
+    match wm {
+        "sway" => "~/.config/sway/config",
+        "hyprland" => "~/.config/hypr/hyprland.conf",
+        _ => "~/.config/labwc/rc.xml",
+    }
+}
+
+/// Saved session choice (~/.config/sticklab-wm), defaulting to labwc. Pure over file text.
+fn saved_wm(file_text: Option<&str>) -> &'static str {
+    file_text
+        .and_then(|t| normalize_wm(t))
+        .unwrap_or("labwc")
+}
+
+fn wm_path() -> std::path::PathBuf {
+    std::env::var_os("HOME")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| std::path::PathBuf::from("/root"))
+        .join(".config/sticklab-wm")
+}
+
+fn wm(args: &[String]) {
+    if args.len() < 3 {
+        let saved = fs::read_to_string(wm_path()).ok();
+        let cur = saved_wm(saved.as_deref());
+        println!("StickLab OS window managers (all Wayland, same Bolt=Alt keys, same bar):");
+        for id in WMS {
+            let mark = if *id == cur { "*" } else { " " };
+            let state = if std::path::Path::new(&format!("/usr/bin/{}", wm_binary(id))).exists() {
+                "installed"
+            } else {
+                "missing"
+            };
+            let style = match *id {
+                "labwc" => "stacking (default, Openbox-style)",
+                "sway" => "manual tiling",
+                _ => "dynamic tiling + eye candy",
+            };
+            println!(" {mark} {id:<9} {style:<32} [{state}]  keys: {}", wm_config(id));
+        }
+        println!("current: {cur} (takes effect on next tty1 login)");
+        println!("switch:  rsetup wm <labwc|sway|hyprland>   or one-shot: STICKLAB_WM=sway");
+        return;
+    }
+    match normalize_wm(&args[2]) {
+        Some(id) => {
+            let p = wm_path();
+            if let Some(parent) = p.parent() {
+                let _ = fs::create_dir_all(parent);
+            }
+            match fs::write(&p, format!("{id}\n")) {
+                Ok(()) => println!("window manager → {id} (log out of tty1 and back in; keys: {})", wm_config(id)),
+                Err(e) => {
+                    eprintln!("could not save {p:?}: {e}");
+                    std::process::exit(1);
+                }
+            }
+        }
+        None => {
+            eprintln!("unknown window manager '{}'. Try: rsetup wm <labwc|sway|hyprland>", args[2]);
+            std::process::exit(2);
+        }
+    }
+}
 
 fn help() {
     println!("rsetup — StickLab OS first-boot helper");
     println!("  rsetup status              hostname, network, desktop readiness");
     println!("  rsetup coding              coding toolchain versions (gcc, python, go, node, rust, nvim)");
     println!("  rsetup customize           map of every themeable file (keys, bar, terminal, editor)");
+    println!("  rsetup wm [labwc|sway|hyprland]   list or switch window manager (next tty1 login)");
     println!("  sudo rsetup set-hostname NAME");
     println!("  sudo rsetup enable-gui     enable NetworkManager + seatd, show desktop hint");
 }
@@ -23,7 +113,7 @@ fn status() {
         .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
         .unwrap_or_else(|_| "unknown".into());
     println!("NetworkManager: {nm}");
-    for app in ["labwc", "waybar", "wofi", "foot", "nvim"] {
+    for app in ["labwc", "sway", "Hyprland", "waybar", "wofi", "foot", "nvim"] {
         println!(
             "  {app}: {}",
             if std::path::Path::new(&format!("/usr/bin/{app}")).exists() {
@@ -38,7 +128,10 @@ fn status() {
 
 fn customize() {
     println!("StickLab OS customization map (all plain text, edit + reload):");
+    println!("  wm        rsetup wm                       labwc (stacking) · sway (tiling) · hyprland (dynamic)");
     println!("  keys      ~/.config/labwc/rc.xml          Bolt (= Alt) shortcuts, add your own");
+    println!("            ~/.config/sway/config           same Bolt keys for the sway session");
+    println!("            ~/.config/hypr/hyprland.conf    same Bolt keys for the hyprland session");
     println!("  menu      ~/.config/labwc/menu.xml        right-click menu entries");
     println!("  autostart ~/.config/labwc/autostart       wallpaper, bar, notifications, extras");
     println!("  bar       ~/.config/waybar/config.jsonc + style.css   modules, position, accent #b4befe");
@@ -47,7 +140,7 @@ fn customize() {
     println!("  editor    ~/.config/nvim/init.lua         options, keymaps, plugin pointer");
     println!("  shell     ~/.zshrc  ~/.bashrc             prompt, aliases, EDITOR");
     println!("  accent    swap #b4befe (lavender) for #a6e3a1 mint, #fab387 peach, #f38ba8 red");
-    println!("  reload    labwc --reconfigure · pkill -USR2 waybar · new foot for terminal/theme");
+    println!("  reload    labwc --reconfigure · sway reload (Bolt+Shift+R) · hyprctl reload · pkill -USR2 waybar");
 }
 
 fn tool_version(tool: &str, args: &[&str]) -> String {
@@ -94,6 +187,7 @@ fn main() {
         "status" => status(),
         "coding" => coding(),
         "customize" => customize(),
+        "wm" | "desktop" | "session" => wm(&args),
         "set-hostname" => {
             if args.len() < 3 {
                 eprintln!("usage: sudo rsetup set-hostname NAME");
@@ -108,8 +202,42 @@ fn main() {
                 let _ = Command::new("systemctl").args(["enable", svc]).status();
                 println!("enabled {svc}");
             }
-            println!("Desktop autostart: log in as `live` on tty1, labwc starts automatically.");
+            println!("Desktop autostart: log in on tty1, your chosen WM starts automatically (`rsetup wm` to switch).");
         }
         _ => help(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn wm_names_normalize_case_and_shorthand() {
+        assert_eq!(normalize_wm("labwc"), Some("labwc"));
+        assert_eq!(normalize_wm("Sway"), Some("sway"));
+        assert_eq!(normalize_wm("  hypr  "), Some("hyprland"));
+        assert_eq!(normalize_wm("Hyprland"), Some("hyprland"));
+        assert_eq!(normalize_wm("i3"), None);
+        assert_eq!(normalize_wm(""), None);
+    }
+
+    #[test]
+    fn wm_binaries_and_configs_cover_all_sessions() {
+        for id in WMS {
+            assert!(!wm_binary(id).is_empty());
+            assert!(wm_config(id).starts_with("~/.config/"));
+        }
+        assert_eq!(wm_binary("hyprland"), "Hyprland");
+        assert_eq!(wm_binary("sway"), "sway");
+        assert_eq!(wm_binary("labwc"), "labwc");
+    }
+
+    #[test]
+    fn saved_wm_defaults_to_labwc() {
+        assert_eq!(saved_wm(None), "labwc");
+        assert_eq!(saved_wm(Some("garbage")), "labwc");
+        assert_eq!(saved_wm(Some("sway\n")), "sway");
+        assert_eq!(saved_wm(Some("hypr")), "hyprland");
     }
 }

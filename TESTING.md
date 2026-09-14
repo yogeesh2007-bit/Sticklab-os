@@ -1,6 +1,6 @@
 # StickLab OS — testing log
 
-Every line of Rust is unit-tested (`cargo test`, 12 tests). Every ISO is content-audited before release. This file records how and what was found.
+Every line of Rust is unit-tested (`cargo test`, 15 tests). Every ISO is content-audited before release. This file records how and what was found.
 
 ## 1. Rust unit tests (`cargo test` in `rust/`)
 
@@ -14,14 +14,23 @@ Every line of Rust is unit-tested (`cargo test`, 12 tests). Every ISO is content
 | `logo_has_seven_rows_and_sticklab_shape` | logo intact (7 rows, block letters) |
 | `identify_board_known_chips_and_unknown` | USB VID:PID → board names (case-insensitive, whitespace-tolerant); unknowns = `None` |
 | `render_contains_logo_and_rows` / `render_coloured_has_escapes` | plain mode has zero escapes; color mode has them |
+| `boot_mode_efi_vs_bios` | UEFI vs legacy-BIOS string mapping for the dual-boot audit |
+| `os_prober_parses_devices_and_labels` | `os-prober` lines → (device, label); blanks/unknowns handled |
+| `esp_mounts_finds_vfat_efi_only` | only FAT ESP mounts (`/boot/efi`, `/boot`) detected, ext4 ignored |
+| `wm_names_normalize_case_and_shorthand` | `rsetup wm` accepts case/whitespace/`hypr` shorthand, rejects unknowns |
+| `wm_binaries_and_configs_cover_all_sessions` | every WM id maps to a binary + a key-config path |
+| `saved_wm_defaults_to_labwc` | missing/garbage session file → labwc; `sway`, `hypr` shorthand parse |
 
 ## 2. ISO content audit (unsquashfs, read-only loop mount)
 
 - ✅ kernel + initramfs present, BIOS+UEFI bootloaders, StickLab OS menu entries
 - ✅ `sticklab`, `rinit`, `rfetch`, `rsetup` in `/usr/local/bin` (mode 755, root-owned)
-- ✅ `labwc`, `nvidia-smi` on board
+- ✅ `labwc`/`sway`/`Hyprland`, `nvidia-smi` on board
 - 🐛 **Found:** only login-capable user was `root` with a **locked** password and **no autologin** → unbootable login prompt. **Fixed** via `airootfs/etc/systemd/system/getty@tty1.service.d/autologin.conf`.
 - ✅ `root:*` (locked), sshd **not** enabled, sudoers root-only, ufw enabled by default + service wanted.
+- ✅ dual-boot: `grub`, `os-prober`, `ntfs-3g`, `dosfstools`, `mtools`, `parted`, `gptfdisk` on board; `sticklab dualboot` audits UEFI/BIOS, ESP, Secure Boot, other OSes.
+- ✅ `labwc`, `sway`, `Hyprland` + `xorg-xwayland` on board; `~/.config/sticklab-wm` default `labwc`; `.bash_profile` session picker with fallback chain (chosen → labwc → sway → Hyprland → foot); sway/hyprland configs share Bolt keys, bar, accent
+- ✅ waybar `wlr/workspaces` (compositor-agnostic) + per-WM fallbacks; `sticklab doctor` passes with any of the 3 compositors
 
 ## 3. Userspace boot test (`systemd-nspawn --boot` on extracted squashfs)
 

@@ -43,12 +43,14 @@ fn main() {
     println!("[rinit] {} wielding Rust core", kernel.trim());
     println!("[rinit] pid={} — handing control to systemd", std::process::id());
 
-    // 3. If labwc + foot exist, note desktop readiness (autostart via live user .bash_profile).
+    // 3. If a compositor + foot exist, note desktop readiness (session picker via live user .bash_profile).
     let labwc = Path::new("/usr/bin/labwc").exists();
+    let sway = Path::new("/usr/bin/sway").exists();
+    let hyprland = Path::new("/usr/bin/Hyprland").exists();
     let foot = Path::new("/usr/bin/foot").exists();
     println!(
-        "[rinit] desktop: labwc={} foot={} (autostart via live user .bash_profile on tty1)",
-        labwc, foot
+        "[rinit] desktop: labwc={} sway={} hyprland={} foot={} (`rsetup wm` picks the tty1 session)",
+        labwc, sway, hyprland, foot
     );
     println!("[rinit] done. Try: rfetch | rsetup coding");
 }

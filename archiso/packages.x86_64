@@ -1,4 +1,4 @@
-# StickLab OS package list — coding + learn-Linux + Labwc desktop + GPU, budgeted <2GB USB image.
+# StickLab OS package list — coding + learn-Linux + 3 Wayland desktops + GPU, budgeted <2GB USB image.
 # GPU: NVIDIA (open modules + userspace = CUDA-ready) + AMD/Intel Vulkan + OpenCL loader.
 # Languages pre-installed: C/C++, Python, Go, Node, Rust, Java-runtime, Ruby, PHP, Lua, Perl.
 # Full JDK / CUDA toolkit install on demand via `sticklab setup-gpu` / pacman (online).
@@ -104,7 +104,9 @@ pciutils
 bluez
 bluez-utils
 
-# --- desktop: Labwc (stacking, customizable) + Wayland helpers ---
+# --- desktop: 3 Wayland compositors (stacking + tiling + dynamic) + shared helpers ---
+# labwc = stacking default (Openbox-style) · sway = manual tiling · hyprland = dynamic tiling + eye candy.
+# All three share waybar / wofi / foot / mako / swaybg, same Bolt(=Alt) keys, same lavender accent.
 seatd
 mesa
 libxkbcommon
@@ -113,6 +115,9 @@ fontconfig
 ttf-dejavu
 ttf-jetbrains-mono
 labwc
+sway
+hyprland
+xorg-xwayland
 waybar
 wofi
 foot
@@ -135,8 +140,15 @@ thermald
 cpupower
 ufw
 
-# --- boot + install ---
+# --- boot + install (BIOS+UEFI live, GRUB dual-boot on installed systems) ---
 efibootmgr
+grub
+os-prober
+ntfs-3g
+dosfstools
+mtools
+parted
+gptfdisk
 syslinux
 mkinitcpio
 mkinitcpio-archiso

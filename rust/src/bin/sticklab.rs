@@ -8,6 +8,7 @@
 //!   sticklab doctor     health + security check with fix hints (offline-friendly)
 //!   sticklab power      CPU/power report: governor, battery, TLP (longer charge)
 //!   sticklab learn      guided Linux-learning path using tools on this ISO
+//!   sticklab dualboot   dual-boot audit: UEFI/BIOS, ESP, Secure Boot, other OSes, install recipe
 //!   sticklab setup-gpu  one-command full CUDA toolkit / JDK install (needs internet)
 //!   sticklab setup-hardware  one-command MCU toolchains: ARM, AVR, ESP, Pico (needs internet)
 
@@ -203,10 +204,10 @@ fn doctor() {
     };
     check("root filesystem writable", have("/usr/bin/pacman"), "are you on the live ISO?", &mut ok);
     let mem = fs::read_to_string("/proc/meminfo").unwrap_or_default();
-    check("RAM >= 2GB for desktop", mem_total_kb(&mem) >= 2_000_000, "use tty (Ctrl+Alt+F2) instead of labwc", &mut ok);
+    check("RAM >= 2GB for desktop", mem_total_kb(&mem) >= 2_000_000, "use tty (Ctrl+Alt+F2) instead of the desktop", &mut ok);
     let avail = Command::new("sh").args(["-c", "df -m / | awk 'NR==2{print $4}'"]).output().map(|o| String::from_utf8_lossy(&o.stdout).trim().parse::<u64>().unwrap_or(0)).unwrap_or(0);
     check("disk space >= 512MB free", avail >= 512, "clean pacman cache: sudo pacman -Scc", &mut ok);
-    check("labwc desktop installed", have("/usr/bin/labwc"), "reinstall profile or use foot on tty", &mut ok);
+    check("window manager installed (labwc/sway/hyprland)", have("/usr/bin/labwc") || have("/usr/bin/sway") || have("/usr/bin/Hyprland"), "reinstall profile or use foot on tty (`rsetup wm` to switch)", &mut ok);
     check("NetworkManager present", have("/usr/bin/NetworkManager") || have("/usr/bin/nmtui"), "use `nmtui` / check cable", &mut ok);
     check("GPU userspace (nvidia-utils or mesa)", have("/usr/lib/libcuda.so.1") || have("/usr/lib/dri/radeonsi_dri.so") || have("/usr/lib/libGLX_mesa.so.0"), "run `sticklab gpu`", &mut ok);
     // --- security surface ---
@@ -263,7 +264,7 @@ fn learn() {
     println!("  6. `btop` + `ls /proc` — processes, then the virtual filesystem");
     println!("  7. `nmtui` + `ip addr` — networking hands-on");
     println!("  8. `sticklab power` + `cpupower frequency-info` — how your CPU sips power");
-    println!("  9. edit ~/.config/labwc/rc.xml — your WM, your rules");
+    println!("  9. edit ~/.config/labwc/rc.xml — your WM, your rules (`rsetup wm` to try sway/hyprland)");
     println!("  10. `rsetup customize` — map of every themeable file (bar, terminal, keys, editor)");
 }
 
@@ -409,6 +410,137 @@ fn setup_hardware() {
     println!("  Detect after       : plug the board in, run `sticklab boards`");
 }
 
+/// UEFI when booted via UEFI (efivars present), else legacy BIOS/CSM. Pure — unit tested.
+fn boot_mode(efi_vars_present: bool) -> &'static str {
+    if efi_vars_present {
+        "UEFI"
+    } else {
+        "BIOS (legacy/CSM)"
+    }
+}
+
+/// Parse `os-prober` output into (device, label) pairs. Pure — unit tested.
+/// Each line looks like: `/dev/sda1:Windows 10:Windows:chain`
+fn parse_os_prober(output: &str) -> Vec<(String, String)> {
+    output
+        .lines()
+        .filter_map(|l| {
+            let l = l.trim();
+            if l.is_empty() {
+                return None;
+            }
+            let mut parts = l.splitn(2, ':');
+            let dev = parts.next()?.trim();
+            let label = parts.next().unwrap_or("").split(':').next().unwrap_or("").trim();
+            if dev.is_empty() {
+                return None;
+            }
+            Some((
+                dev.to_string(),
+                if label.is_empty() { "unknown OS".to_string() } else { label.to_string() },
+            ))
+        })
+        .collect()
+}
+
+/// Find FAT/ESP mounts from /proc/mounts text (mountpoints containing efi/boot). Pure — unit tested.
+fn find_esp_mounts(mounts: &str) -> Vec<String> {
+    mounts
+        .lines()
+        .filter_map(|l| {
+            let mut f = l.split_whitespace();
+            let _dev = f.next()?;
+            let mnt = f.next()?;
+            let fstype = f.next()?;
+            let lower = mnt.to_lowercase();
+            if (lower.contains("efi") || lower == "/boot") && (fstype == "vfat" || fstype == "fat32") {
+                Some(mnt.to_string())
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn dualboot() {
+    println!("StickLab OS dual-boot audit (install alongside Windows / any Linux, keep both):");
+    // --- 1. firmware mode: installed OS and live stick MUST match (UEFI vs BIOS) ---
+    let efi = Path::new("/sys/firmware/efi").exists();
+    let mode = boot_mode(efi);
+    println!("  firmware boot mode: {mode}");
+    if !efi {
+        println!("    → booted via legacy BIOS/CSM. Most modern PCs (Windows 10/11) use UEFI:");
+        println!("      reboot the stick via the UEFI: entry in the firmware boot menu, then reinstall.");
+    }
+    // --- 2. Secure Boot ---
+    let sb = Command::new("sh")
+        .args(["-c", "mokutil --sb-state 2>/dev/null || bootctl status 2>/dev/null | grep -i 'Secure Boot' || echo none"])
+        .output()
+        .map(|o| String::from_utf8_lossy(&o.stdout).trim().to_string())
+        .unwrap_or_default();
+    if sb.to_lowercase().contains("enabled") {
+        println!("  Secure Boot: ENABLED → StickLab OS (plain archiso) needs it OFF in firmware setup.");
+    } else if sb.is_empty() || sb == "none" {
+        println!("  Secure Boot: unknown from here — if install/boot fails, disable it in firmware setup.");
+    } else if sb.to_lowercase().contains("secure boot") {
+        println!("  {sb} (if it says enabled, StickLab OS needs Secure Boot OFF in firmware setup)");
+    } else {
+        println!("  Secure Boot: {sb}");
+    }
+    // --- 3. ESP (EFI System Partition) ---
+    let mounts = fs::read_to_string("/proc/mounts").unwrap_or_default();
+    let esps = find_esp_mounts(&mounts);
+    if efi && esps.is_empty() {
+        println!("  ESP: not mounted (normal on live ISO) — at install, REUSE the existing FAT32 ESP as /boot (do NOT format it).");
+    } else if !esps.is_empty() {
+        for m in &esps {
+            println!("  ESP mounted: {m} (reuse as /boot on UEFI installs, never format a shared ESP)");
+        }
+    }
+    // --- 4. other OSes ---
+    if have("/usr/bin/os-prober") {
+        let out = Command::new("sh")
+            .args(["-c", "os-prober 2>/dev/null"])
+            .output()
+            .map(|o| String::from_utf8_lossy(&o.stdout).to_string())
+            .unwrap_or_default();
+        let found = parse_os_prober(&out);
+        if found.is_empty() {
+            println!("  other OSes: none detected (fresh disk? or NTFS partitions not yet visible).");
+        } else {
+            for (dev, label) in &found {
+                println!("  found: {label} on {dev}");
+            }
+        }
+        println!("    hint: run as root; encrypted/BitLocker volumes stay hidden until unlocked.");
+    } else {
+        println!("  other OSes: os-prober missing → sudo pacman -S os-prober ntfs-3g");
+    }
+    // --- 5. dual-boot toolchain on this ISO ---
+    for (label, bin) in [
+        ("GRUB (BIOS+UEFI dual-boot loader)", "grub-install"),
+        ("OS detector", "os-prober"),
+        ("Windows NTFS access", "ntfs-3g"),
+        ("UEFI boot entries", "efibootmgr"),
+        ("partition editor", "parted"),
+    ] {
+        if have(&format!("/usr/bin/{bin}")) {
+            println!("  {label}: {bin} ready");
+        } else {
+            println!("  {label}: {bin} missing → sudo pacman -S grub os-prober ntfs-3g efibootmgr parted");
+        }
+    }
+    // --- 6. recipe (the part that keeps the other OS alive) ---
+    println!("  install recipe (safe dual-boot):");
+    println!("    1. In Windows: disable Fast Startup + BitLocker-suspend, shrink C: to free space, note the ESP.");
+    println!("    2. Boot StickLab OS in the SAME mode as the other OS (UEFI ↔ UEFI).");
+    println!("    3. Run `archinstall` → manual partitioning → reuse existing ESP as /boot (no format),");
+    println!("       install StickLab OS into the FREE space only, bootloader = GRUB.");
+    println!("    4. After install: set GRUB_DISABLE_OS_PROBER=false in /etc/default/grub, run");
+    println!("       `sudo grub-mkconfig -o /boot/grub/grub.cfg` so the other OS appears in the menu.");
+    println!("    5. Windows shows wrong clock after? `timedatectl set-local-rtc 1` on Linux side.");
+}
+
 fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
@@ -423,11 +555,12 @@ fn main() {
         "doctor" => doctor(),
         "power" => power(),
         "learn" => learn(),
+        "dualboot" => dualboot(),
         "setup-gpu" => setup_gpu(),
         "setup-hardware" => setup_hardware(),
         "help" | "--help" | "-h" => {
             println!("sticklab — StickLab OS control center");
-            println!("  sticklab [dashboard] | gpu | langs | boards | new <tpl> <name> | doctor | power | learn | setup-gpu | setup-hardware");
+            println!("  sticklab [dashboard] | gpu | langs | boards | new <tpl> <name> | doctor | power | learn | dualboot | setup-gpu | setup-hardware");
         }
         _ => {
             eprintln!("unknown command '{}'. Try: sticklab help", args[1]);
@@ -502,5 +635,34 @@ mod tests {
         );
         assert!(identify_board("1234", "5678").is_none());
         assert!(identify_board("", "").is_none());
+    }
+
+    #[test]
+    fn boot_mode_efi_vs_bios() {
+        assert_eq!(boot_mode(true), "UEFI");
+        assert_eq!(boot_mode(false), "BIOS (legacy/CSM)");
+    }
+
+    #[test]
+    fn os_prober_parses_devices_and_labels() {
+        let out = "/dev/sda1:Windows 10:Windows:chain\n/dev/sda5:Ubuntu 24.04:Ubuntu:linux\n";
+        let found = parse_os_prober(out);
+        assert_eq!(found.len(), 2);
+        assert_eq!(found[0], ("/dev/sda1".to_string(), "Windows 10".to_string()));
+        assert_eq!(found[1], ("/dev/sda5".to_string(), "Ubuntu 24.04".to_string()));
+        assert!(parse_os_prober("").is_empty());
+        assert!(parse_os_prober("\n  \n").is_empty());
+        // missing label still yields a device entry
+        assert_eq!(parse_os_prober("/dev/nvme0n1p1:::chain").len(), 1);
+    }
+
+    #[test]
+    fn esp_mounts_finds_vfat_efi_only() {
+        let mounts = "dev1 /boot/efi vfat rw 0 0\ndev2 /home ext4 rw 0 0\ndev3 /boot vfat rw 0 0\n";
+        let esps = find_esp_mounts(mounts);
+        assert!(esps.contains(&"/boot/efi".to_string()));
+        assert!(esps.contains(&"/boot".to_string()));
+        assert_eq!(esps.len(), 2);
+        assert!(find_esp_mounts("dev / ext4 rw 0 0\n").is_empty());
     }
 }

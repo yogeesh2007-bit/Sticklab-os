@@ -1,0 +1,59 @@
+# StickLab OS sway config — manual tiling WM. Same Bolt (= Alt) keys as Labwc.
+# Switch sessions: `rsetup wm sway` (labwc = stacking default, hyprland = dynamic tiling).
+# Reload after edits: Bolt+Shift+R. Full options: `man sway`.
+
+# Bolt = Alt. Super is left alone so a host OS (e.g. Omarchy) keeps it in a VM.
+set $bolt Mod1
+set $term foot
+set $menu wofi --show drun
+
+# Basics: terminal | launcher | close | fullscreen
+bindsym $bolt+Return exec $term
+bindsym $bolt+d exec $menu
+bindsym $bolt+q kill
+bindsym $bolt+f fullscreen toggle
+
+# Screenshot (Bolt+S) → ~/Pictures · lock (Bolt+L)
+bindsym $bolt+s exec sh -c 'mkdir -p ~/Pictures && grim -g "$(slurp)" ~/Pictures/shot-$(date +%s).png'
+bindsym $bolt+l exec swaylock -f -c 1e1e2e
+
+# Workspaces 1-4 (matches Labwc desktops) + move windows there with Shift
+bindsym $bolt+1 workspace number 1
+bindsym $bolt+2 workspace number 2
+bindsym $bolt+3 workspace number 3
+bindsym $bolt+4 workspace number 4
+bindsym $bolt+Shift+1 move container to workspace number 1
+bindsym $bolt+Shift+2 move container to workspace number 2
+bindsym $bolt+Shift+3 move container to workspace number 3
+bindsym $bolt+Shift+4 move container to workspace number 4
+bindsym $bolt+Tab workspace next
+bindsym $bolt+Shift+Tab workspace prev
+
+# Tiling controls (sway-only extras — Labwc/Hyprland differ here).
+# NOTE: Bolt+L stays = lock (same as Labwc/Hyprland), so no vim-style
+# Bolt+H/J/K/L focus keys here — use Bolt+arrows instead.
+bindsym $bolt+Left focus left
+bindsym $bolt+Down focus down
+bindsym $bolt+Up focus up
+bindsym $bolt+Right focus right
+bindsym $bolt+Shift+Left move left
+bindsym $bolt+Shift+Down move down
+bindsym $bolt+Shift+Up move up
+bindsym $bolt+Shift+Right move right
+bindsym $bolt+b splith
+bindsym $bolt+v splitv
+bindsym $bolt+e layout toggle split
+bindsym $bolt+Shift+r reload
+
+# Look: same wallpaper color, bar, notifications, terminal server as Labwc
+output * bg #1e1e2e solid_color
+bar {
+  swaybar_command waybar
+}
+exec swaybg -o '*' -c '#1e1e2e'
+exec waybar
+exec mako
+exec foot --server
+exec swayidle -w timeout 300 'swaylock -f -c 1e1e2e'
+
+# X apps (XWayland) just work — no config needed.

@@ -1,13 +1,16 @@
-// StickLab OS waybar — plain JSONC, comment and reorder freely, then `pkill -USR2 waybar`.
-// modules-left / center / right: pick from clock cpu memory network pulseaudio battery tray backlight custom/*
+// StickLab OS waybar — shared by labwc, sway and hyprland. Plain JSONC, comment and
+// reorder freely, then `pkill -USR2 waybar`.
+// wlr/workspaces is compositor-agnostic (works on all three WMs); the per-WM
+// modules below are ignored with a warning on WMs that don't provide them.
 // full widget options: https://github.com/Alexays/Waybar/wiki
 {
   "layer": "top",
   "position": "top",        // try "bottom" — one word, whole new vibe
   "height": 30,
-  "modules-left": ["labwc/workspaces", "labwc/window"],
+  "modules-left": ["wlr/workspaces", "sway/window", "labwc/window"],
   "modules-center": ["clock"],
   "modules-right": ["cpu", "memory", "network", "pulseaudio", "battery", "tray"],
+  "wlr/workspaces": { "format": "{name}" },
   "clock": { "format": "{:%a %d %b %H:%M}" },
   "cpu": { "format": "CPU {usage}%" },
   "memory": { "format": "MEM {}%" },
